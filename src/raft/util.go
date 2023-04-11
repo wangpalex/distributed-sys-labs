@@ -1,13 +1,25 @@
 package raft
 
-import "log"
+import (
+	"log"
+	"math/rand"
+	"time"
+)
 
 // Debugging
-const Debug = false
+const Debug = true
 
 func DPrintf(format string, a ...interface{}) (n int, err error) {
 	if Debug {
 		log.Printf(format, a...)
 	}
 	return
+}
+
+func GetInitElectionTimeout() time.Duration {
+	return time.Duration(rand.Int63()%ElectionTimeout) * time.Millisecond
+}
+
+func GetRandElectionTimeout() time.Duration {
+	return time.Duration(ElectionTimeout+rand.Int63()%ElectionTimeout) * time.Millisecond
 }
