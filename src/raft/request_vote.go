@@ -1,9 +1,5 @@
 package raft
 
-import "time"
-
-// RequestVote RPC arguments structure.
-// field names must start with capital letters!
 type RequestVoteArgs struct {
 	// Your data here (2A, 2B).
 	Term         int
@@ -12,8 +8,6 @@ type RequestVoteArgs struct {
 	LastLogTerm  int
 }
 
-// RequestVote RPC reply structure.
-// field names must start with capital letters!
 type RequestVoteReply struct {
 	// Your data here (2A).
 	Term        int
@@ -30,7 +24,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
 		reply.VoteGranted = false
-		DPrintf("%v: reject vote for peer %v. Reason: my term greater", rf.getRoleAndId(), args.CandidateId)
+		DPrintf("%v: reject vote for candidate %v. Reason: my term greater", rf.getRoleAndId(), args.CandidateId)
 		return
 	}
 
@@ -45,7 +39,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		rf.compareLog(args.LastLogIndex, args.LastLogTerm) {
 		rf.votedFor = args.CandidateId
 		rf.persist()
-		rf.resetElectionTimer() // Reset election timer after vote to candidate
+		rf.resetElectionTimer() // Reset election timer only after vote to candidate
 		reply.Term = rf.currTerm
 		reply.VoteGranted = true
 		DPrintf("%v: grant vote for candidate %v", rf.getRoleAndId(), args.CandidateId)
@@ -53,55 +47,15 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	} else {
 		reply.Term = rf.currTerm
 		reply.VoteGranted = false
-		DPrintf("%v: reject vote for peer %v. Reason: voted or log not up-to-date", rf.getRoleAndId(), args.CandidateId)
+		DPrintf("%v: reject vote for candidate %v. Reason: already voted or log not up-to-date", rf.getRoleAndId(), args.CandidateId)
 		return
 	}
 }
 
-// example code to send a RequestVote RPC to a server.
-// server is the index of the target server in rf.peers[].
-// expects RPC arguments in args.
-// fills in *reply with RPC reply, so caller should
-// pass &reply.
-// the types of the args and reply passed to Call() must be
-// the same as the types of the arguments declared in the
-// handler function (including whether they are pointers).
-//
-// The labrpc package simulates a lossy network, in which servers
-// may be unreachable, and in which requests and replies may be lost.
-// Call() sends a request and waits for a reply. If a reply arrives
-// within a timeout interval, Call() returns true; otherwise
-// Call() returns false. Thus Call() may not return for a while.
-// A false return can be caused by a dead server, a live server that
-// can't be reached, a lost request, or a lost reply.
-//
-// Call() is guaranteed to return (perhaps after a delay) *except* if the
-// handler function on the server side does not return.  Thus there
-// is no need to implement your own timeouts around Call().
-//
-// look at the comments in ../labrpc/labrpc.go for more details.
-//
-// if you're having trouble getting RPC to work, check that you've
-// capitalized all field names in structs passed over RPC, and
-// that the caller passes the address of the reply struct with &, not
-// the struct itself.
 func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
-	res := make(chan bool, 1)
-	go func() {
-		res <- rf.peers[server].Call("Raft.RequestVote", args, reply)
-		close(res)
-	}()
-
-	select {
-	case ok := <-res:
-		if !ok {
-			DPrintf("%s: error sending RequestVote RPC to peer %d", rf.getRoleAndId(), server)
-		}
-		return ok
-	case <-time.After(RpcTimeout * time.Millisecond):
-		DPrintf("%s: RequestVote RPC to peer %d timeout", rf.getRoleAndId(), server)
-		return false
-	}
+	// No need to implement timeout as Call() always returns
+	// given that the RPC handler always return.
+	return rf.peers[server].Call("Raft.RequestVote", args, reply)
 }
 
 func (rf *Raft) startElection() {
@@ -134,6 +88,7 @@ func (rf *Raft) startElection() {
 		go func(p int) {
 			reply := RequestVoteReply{}
 			if !rf.sendRequestVote(p, &args, &reply) {
+				DPrintf("%s: error sending RequestVote RPC to peer %d", rf.getRoleAndId(), p)
 				return
 			}
 			// Handle reply
@@ -148,6 +103,12 @@ func (rf *Raft) startElection() {
 	}
 
 	for rf.role == Candidate && rf.currTerm == args.Term {
+		/*
+		 * This loop will exit if:
+		 * 1. Collected majority grant or reject.
+		 * 2. Is not candidate anymore (explored higher term and convert to follower)
+		 * 3. currTerm changed (e.g.timeout and started new election)
+		 */
 		select {
 		case granted := <-voteCh:
 			numVoted += 1
@@ -156,7 +117,7 @@ func (rf *Raft) startElection() {
 			}
 
 			if numGranted >= n/2+1 {
-				// Acquired majority vote
+				// Collected majority grant
 				if rf.role == Candidate && rf.currTerm == args.Term {
 					rf.convertToLeader()
 					rf.broadcastHeartbeat()
@@ -173,7 +134,7 @@ func (rf *Raft) startElection() {
 }
 
 // compareLog returns true if given (lastLogIndex, lastLogTerm) is
-// *at least up-to-date* as my log. Otherwise, returns false.
+// at least up-to-date as my log. Otherwise, returns false.
 func (rf *Raft) compareLog(lastLogIndex, lastLogTerm int) bool {
 	myLastLogIndex, myLastLogTerm := rf.lastLogIndexAndTerm()
 	if lastLogTerm > myLastLogTerm {

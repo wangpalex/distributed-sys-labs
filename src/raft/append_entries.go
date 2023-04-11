@@ -1,7 +1,5 @@
 package raft
 
-import "time"
-
 type AppendEntriesArgs struct {
 	// Your data here (2A, 2B).
 	Term         int
@@ -12,13 +10,11 @@ type AppendEntriesArgs struct {
 	LeaderCommit int
 }
 
-// RequestVote RPC reply structure.
-// field names must start with capital letters!
 type AppendEntriesReply struct {
 	// Your data here (2A).
 	Term      int
 	Success   bool
-	NextIndex int // Suggested next index for leader to sync
+	NextIndex int // Suggested next index for leader
 }
 
 // RequestVote RPC handler.
@@ -27,9 +23,6 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	defer rf.resetElectionTimer()
-
-	//DPrintf("%v: handling RequestVote from leader %v", rf.getRoleAndId(), args.LeaderId)
-	//defer DPrintf("%v: finish handling RequestVote from leader %v", rf.getRoleAndId(), args.LeaderId)
 
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
@@ -56,6 +49,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	idx := args.PrevLogIndex + 1 + i
 	for i < len(args.Entries) {
 		if idx > rf.lastLogIndex() || rf.logs[idx].Term != args.Entries[i].Term {
+			// Replace all subsequent entries starting at un-matching entry
 			copy(rf.logs[idx:], args.Entries[i:])
 			break
 		}
@@ -70,22 +64,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
 	DPrintf("%s: sending AppendEntries RPC to peer %v", rf.getRoleAndId(), server)
-	res := make(chan bool, 1)
-	go func() {
-		res <- rf.peers[server].Call("Raft.AppendEntries", args, reply)
-		close(res)
-	}()
-
-	select {
-	case ok := <-res:
-		if !ok {
-			DPrintf("%s: error sending AppendEntries RPC to peer %d", rf.getRoleAndId(), server)
-		}
-		return ok
-	case <-time.After(RpcTimeout * time.Millisecond):
-		DPrintf("%s: AppendEntries RPC to peer %d timeout", rf.getRoleAndId(), server)
-		return false
-	}
+	return rf.peers[server].Call("Raft.AppendEntries", args, reply)
 }
 
 func (rf *Raft) sendHeartbeat(peer int) {
@@ -111,6 +90,7 @@ func (rf *Raft) sendHeartbeat(peer int) {
 
 	reply := AppendEntriesReply{}
 	if !rf.sendAppendEntries(peer, &args, &reply) {
+		DPrintf("%s: error sending AppendEntries RPC to peer %d", rf.getRoleAndId(), peer)
 		return
 	}
 

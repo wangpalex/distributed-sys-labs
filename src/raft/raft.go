@@ -31,7 +31,6 @@ const (
 	// In milliseconds
 	ElectionTimeout   = 500
 	HeartbeatInterval = 50
-	RpcTimeout        = 50
 )
 
 const (
@@ -184,9 +183,6 @@ func (rf *Raft) ticker() {
 	for rf.killed() == false {
 		// Your code here (2A)
 		// Check if a leader election should be started.
-
-		// pause for a random amount of time between 50 and 350
-		// milliseconds.
 		select {
 		case <-rf.electionTimer.C:
 			go rf.startElection()
