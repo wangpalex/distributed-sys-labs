@@ -1,5 +1,7 @@
 package raft
 
+import "time"
+
 // RequestVote RPC arguments structure.
 // field names must start with capital letters!
 type RequestVoteArgs struct {
@@ -28,7 +30,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
 		reply.VoteGranted = false
-		DPrintf("%v: reject vote for peer %v. Reason: my term greater.", rf.getRoleAndId(), args.CandidateId)
+		DPrintf("%v: reject vote for peer %v. Reason: my term greater", rf.getRoleAndId(), args.CandidateId)
 		return
 	}
 
@@ -46,12 +48,12 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		rf.resetElectionTimer() // Reset election timer after vote to candidate
 		reply.Term = rf.currTerm
 		reply.VoteGranted = true
-		DPrintf("%v: grant vote for peer %v.", rf.getRoleAndId(), args.CandidateId)
+		DPrintf("%v: grant vote for candidate %v", rf.getRoleAndId(), args.CandidateId)
 		return
 	} else {
 		reply.Term = rf.currTerm
 		reply.VoteGranted = false
-		DPrintf("%v: reject vote for peer %v. Reason: voted or log not up-to-date.", rf.getRoleAndId(), args.CandidateId)
+		DPrintf("%v: reject vote for peer %v. Reason: voted or log not up-to-date", rf.getRoleAndId(), args.CandidateId)
 		return
 	}
 }
@@ -84,8 +86,22 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 // that the caller passes the address of the reply struct with &, not
 // the struct itself.
 func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *RequestVoteReply) bool {
-	ok := rf.peers[server].Call("Raft.RequestVote", args, reply)
-	return ok
+	res := make(chan bool, 1)
+	go func() {
+		res <- rf.peers[server].Call("Raft.RequestVote", args, reply)
+		close(res)
+	}()
+
+	select {
+	case ok := <-res:
+		if !ok {
+			DPrintf("%s: error sending RequestVote RPC to peer %d", rf.getRoleAndId(), server)
+		}
+		return ok
+	case <-time.After(RpcTimeout * time.Millisecond):
+		DPrintf("%s: RequestVote RPC to peer %d timeout", rf.getRoleAndId(), server)
+		return false
+	}
 }
 
 func (rf *Raft) startElection() {
@@ -118,7 +134,6 @@ func (rf *Raft) startElection() {
 		go func(p int) {
 			reply := RequestVoteReply{}
 			if !rf.sendRequestVote(p, &args, &reply) {
-				DPrintf("%s: error sending RequestVote RPC to peer %d", rf.getRoleAndId(), p)
 				return
 			}
 			// Handle reply
@@ -129,7 +144,6 @@ func (rf *Raft) startElection() {
 				rf.persist()
 			}
 			voteCh <- reply.VoteGranted
-			return
 		}(peer)
 	}
 

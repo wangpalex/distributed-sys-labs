@@ -1,5 +1,7 @@
 package raft
 
+import "time"
+
 type AppendEntriesArgs struct {
 	// Your data here (2A, 2B).
 	Term         int
@@ -26,6 +28,9 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	defer rf.mu.Unlock()
 	defer rf.resetElectionTimer()
 
+	//DPrintf("%v: handling RequestVote from leader %v", rf.getRoleAndId(), args.LeaderId)
+	//defer DPrintf("%v: finish handling RequestVote from leader %v", rf.getRoleAndId(), args.LeaderId)
+
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
 		reply.Success = false
@@ -39,20 +44,23 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		rf.persist()
 	}
 
-	if rf.logs[args.PrevLogIndex].Term != args.PrevLogTerm {
+	if args.PrevLogIndex > rf.lastLogIndex() || rf.logs[args.PrevLogIndex].Term != args.PrevLogTerm {
+		// Do not have matching prev log entry
 		reply.Term = rf.currTerm
 		reply.Success = false
-		reply.NextIndex = rf.lastMatchingIndex(args.PrevLogIndex, args.PrevLogTerm) + 1
+		reply.NextIndex = rf.lastMatchingIndex(min(args.PrevLogIndex, rf.lastLogIndex()), args.PrevLogTerm) + 1
 		return
 	}
 
 	i := 0
-	offset := args.PrevLogIndex + 1
+	idx := args.PrevLogIndex + 1 + i
 	for i < len(args.Entries) {
-		if rf.logs[offset+i].Term != args.Entries[i].Term {
-			copy(rf.logs[offset+i:], args.Entries[i:])
+		if idx > rf.lastLogIndex() || rf.logs[idx].Term != args.Entries[i].Term {
+			copy(rf.logs[idx:], args.Entries[i:])
 			break
 		}
+		i += 1
+		idx += 1
 	}
 	reply.Term = rf.currTerm
 	reply.Success = true
@@ -61,8 +69,23 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 }
 
 func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
-	ok := rf.peers[server].Call("Raft.AppendEntries", args, reply)
-	return ok
+	DPrintf("%s: sending AppendEntries RPC to peer %v", rf.getRoleAndId(), server)
+	res := make(chan bool, 1)
+	go func() {
+		res <- rf.peers[server].Call("Raft.AppendEntries", args, reply)
+		close(res)
+	}()
+
+	select {
+	case ok := <-res:
+		if !ok {
+			DPrintf("%s: error sending AppendEntries RPC to peer %d", rf.getRoleAndId(), server)
+		}
+		return ok
+	case <-time.After(RpcTimeout * time.Millisecond):
+		DPrintf("%s: AppendEntries RPC to peer %d timeout", rf.getRoleAndId(), server)
+		return false
+	}
 }
 
 func (rf *Raft) sendHeartbeat(peer int) {
@@ -72,7 +95,7 @@ func (rf *Raft) sendHeartbeat(peer int) {
 	}
 
 	rf.heartbeatTimers[peer].Stop()
-	DPrintf("%s: sending AppendEntries RPC", rf.getRoleAndId())
+	defer rf.resetHeartbeatTimer(peer)
 
 	rf.mu.Lock()
 	prevLogIndex, prevLogTerm, entries := rf.getEntriesToSend(peer)
@@ -88,7 +111,6 @@ func (rf *Raft) sendHeartbeat(peer int) {
 
 	reply := AppendEntriesReply{}
 	if !rf.sendAppendEntries(peer, &args, &reply) {
-		DPrintf("%s: error sending AppendEntries RPC to peer %d", rf.getRoleAndId(), peer)
 		return
 	}
 
@@ -110,8 +132,6 @@ func (rf *Raft) sendHeartbeat(peer int) {
 		rf.matchIndex[peer] = reply.NextIndex - 1
 		rf.tryCommitLog()
 	}
-
-	rf.resetHeartbeatTimer(peer)
 }
 
 func (rf *Raft) broadcastHeartbeat() {

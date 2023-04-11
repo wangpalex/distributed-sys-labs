@@ -135,9 +135,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 // believes it is the leader.
 func (rf *Raft) GetState() (int, bool) {
 	// Your code here (2A).
-	rf.mu.Lock()
-	defer rf.mu.Unlock()
-
 	return rf.currTerm, rf.role == Leader
 }
 
@@ -192,34 +189,9 @@ func (rf *Raft) ticker() {
 		// milliseconds.
 		select {
 		case <-rf.electionTimer.C:
-			rf.startElection()
+			go rf.startElection()
 		}
 	}
-}
-
-func (rf *Raft) startHeartbeatTimers() {
-	rf.heartbeatTimers = make([]*time.Timer, len(rf.peers))
-	rf.stopHeartbeat = make(chan struct{})
-	for peer := range rf.peers {
-		if peer == rf.me {
-			continue
-		}
-		rf.heartbeatTimers[peer] = time.NewTimer(HeartbeatInterval)
-		go func(p int) {
-			for !rf.killed() {
-				select {
-				case <-rf.heartbeatTimers[p].C:
-					go rf.sendHeartbeat(p)
-				case <-rf.stopHeartbeat:
-					return
-				}
-			}
-		}(peer)
-	}
-}
-
-func (rf *Raft) stopHeartbeatTimers() {
-	close(rf.stopHeartbeat)
 }
 
 // save Raft's persistent state to stable storage,
@@ -260,6 +232,31 @@ func (rf *Raft) readPersist(data []byte) {
 	// }
 }
 
+func (rf *Raft) startHeartbeatTimers() {
+	rf.heartbeatTimers = make([]*time.Timer, len(rf.peers))
+	rf.stopHeartbeat = make(chan struct{})
+	for peer := range rf.peers {
+		if peer == rf.me {
+			continue
+		}
+		rf.heartbeatTimers[peer] = time.NewTimer(HeartbeatInterval)
+		go func(p int) {
+			for !rf.killed() {
+				select {
+				case <-rf.heartbeatTimers[p].C:
+					go rf.sendHeartbeat(p)
+				case <-rf.stopHeartbeat:
+					return
+				}
+			}
+		}(peer)
+	}
+}
+
+func (rf *Raft) stopHeartbeatTimers() {
+	close(rf.stopHeartbeat)
+}
+
 func (rf *Raft) resetElectionTimer() {
 	rf.electionTimer.Stop()
 	rf.electionTimer.Reset(GetRandElectionTimeout())
@@ -275,6 +272,11 @@ func (rf *Raft) lastLogIndexAndTerm() (lastLogIndex int, lastLogTerm int) {
 	lastLogTerm = rf.logs[lastLogIndex].Term
 	return
 }
+
+func (rf *Raft) lastLogIndex() int {
+	return len(rf.logs) - 1
+}
+
 func (rf *Raft) convertToCandidate() {
 	DPrintf("%s -> Candidate", rf.getRoleAndId())
 	rf.role = Candidate
