@@ -24,18 +24,19 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
-	DPrintf("{}: received {:?}", rf.getRoleAndId(), args)
+	DPrintf("%s: received RequestVote RPC %+v", rf.getRoleAndId(), *args)
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
 		reply.VoteGranted = false
+		DPrintf("%v: reject vote for peer %v. Reason: my term greater.", rf.getRoleAndId(), args.CandidateId)
 		return
 	}
 
-	needPersist := false
 	if args.Term > rf.currTerm {
-		needPersist = true
 		rf.currTerm = args.Term
+		rf.votedFor = -1
 		rf.convertToFollower()
+		rf.persist()
 	}
 
 	if (rf.votedFor == -1 || rf.votedFor == args.CandidateId) &&
@@ -45,13 +46,12 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		rf.resetElectionTimer() // Reset election timer after vote to candidate
 		reply.Term = rf.currTerm
 		reply.VoteGranted = true
+		DPrintf("%v: grant vote for peer %v.", rf.getRoleAndId(), args.CandidateId)
 		return
 	} else {
-		if needPersist {
-			rf.persist()
-		}
 		reply.Term = rf.currTerm
 		reply.VoteGranted = false
+		DPrintf("%v: reject vote for peer %v. Reason: voted or log not up-to-date.", rf.getRoleAndId(), args.CandidateId)
 		return
 	}
 }
@@ -89,7 +89,73 @@ func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *Reques
 }
 
 func (rf *Raft) startElection() {
+	if rf.role == Leader {
+		return // think I am leader, no need to elect
+	}
 
+	rf.convertToCandidate()
+	rf.resetElectionTimer()
+	DPrintf("%s: start election for term %d", rf.getRoleAndId(), rf.currTerm)
+
+	rf.mu.Lock()
+	lastLogIndex, lastLogTerm := rf.lastLogIndexAndTerm()
+	args := RequestVoteArgs{
+		Term:         rf.currTerm,
+		CandidateId:  rf.me,
+		LastLogIndex: lastLogIndex,
+		LastLogTerm:  lastLogTerm,
+	}
+	rf.mu.Unlock()
+
+	n := len(rf.peers)
+	numVoted := 1
+	numGranted := 1
+	voteCh := make(chan bool)
+	for peer := range rf.peers {
+		if peer == rf.me {
+			continue
+		}
+		go func(p int) {
+			reply := RequestVoteReply{}
+			if !rf.sendRequestVote(p, &args, &reply) {
+				DPrintf("%s: error sending RequestVote RPC to peer %d", rf.getRoleAndId(), p)
+				return
+			}
+			// Handle reply
+			if reply.Term > rf.currTerm {
+				rf.currTerm = reply.Term
+				rf.votedFor = -1
+				rf.convertToFollower()
+				rf.persist()
+			}
+			voteCh <- reply.VoteGranted
+			return
+		}(peer)
+	}
+
+	for rf.role == Candidate && rf.currTerm == args.Term {
+		select {
+		case granted := <-voteCh:
+			numVoted += 1
+			if granted {
+				numGranted += 1
+			}
+
+			if numGranted >= n/2+1 {
+				// Acquired majority vote
+				if rf.role == Candidate && rf.currTerm == args.Term {
+					rf.convertToLeader()
+					rf.broadcastHeartbeat()
+				}
+				return
+			} else if numVoted-numGranted >= n/2+1 {
+				// Majority rejected, give up
+				rf.convertToFollower()
+				rf.resetElectionTimer()
+				return
+			}
+		}
+	}
 }
 
 // compareLog returns true if given (lastLogIndex, lastLogTerm) is

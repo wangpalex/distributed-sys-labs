@@ -92,8 +92,9 @@ type Raft struct {
 	matchIndex  []int
 
 	// channels
-	electionTimer  *time.Timer
-	heartbeatTimer *time.Timer
+	electionTimer   *time.Timer
+	heartbeatTimers []*time.Timer
+	stopHeartbeat   chan struct{}
 }
 
 // the service or tester wants to create a Raft server. the ports
@@ -124,7 +125,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.readPersist(persister.ReadRaftState())
 
 	rf.electionTimer = time.NewTimer(GetInitElectionTimeout())
-	rf.heartbeatTimer = time.NewTimer(HeartbeatInterval * time.Millisecond)
 	// start ticker goroutine to start elections
 	go rf.ticker()
 
@@ -183,6 +183,7 @@ func (rf *Raft) killed() bool {
 }
 
 func (rf *Raft) ticker() {
+	DPrintf("Peer %d started", rf.me)
 	for rf.killed() == false {
 		// Your code here (2A)
 		// Check if a leader election should be started.
@@ -192,10 +193,33 @@ func (rf *Raft) ticker() {
 		select {
 		case <-rf.electionTimer.C:
 			rf.startElection()
-		case <-rf.heartbeatTimer.C:
-			rf.sendHeartbeat()
 		}
 	}
+}
+
+func (rf *Raft) startHeartbeatTimers() {
+	rf.heartbeatTimers = make([]*time.Timer, len(rf.peers))
+	rf.stopHeartbeat = make(chan struct{})
+	for peer := range rf.peers {
+		if peer == rf.me {
+			continue
+		}
+		rf.heartbeatTimers[peer] = time.NewTimer(HeartbeatInterval)
+		go func(p int) {
+			for !rf.killed() {
+				select {
+				case <-rf.heartbeatTimers[p].C:
+					go rf.sendHeartbeat(p)
+				case <-rf.stopHeartbeat:
+					return
+				}
+			}
+		}(peer)
+	}
+}
+
+func (rf *Raft) stopHeartbeatTimers() {
+	close(rf.stopHeartbeat)
 }
 
 // save Raft's persistent state to stable storage,
@@ -237,17 +261,13 @@ func (rf *Raft) readPersist(data []byte) {
 }
 
 func (rf *Raft) resetElectionTimer() {
-	if !rf.electionTimer.Stop() {
-		<-rf.electionTimer.C
-	}
+	rf.electionTimer.Stop()
 	rf.electionTimer.Reset(GetRandElectionTimeout())
 }
 
-func (rf *Raft) resetHeartbeatTimer() {
-	if !rf.heartbeatTimer.Stop() {
-		<-rf.heartbeatTimer.C
-	}
-	rf.heartbeatTimer.Reset(HeartbeatInterval * time.Millisecond)
+func (rf *Raft) resetHeartbeatTimer(peer int) {
+	rf.heartbeatTimers[peer].Stop()
+	rf.heartbeatTimers[peer].Reset(HeartbeatInterval * time.Millisecond)
 }
 
 func (rf *Raft) lastLogIndexAndTerm() (lastLogIndex int, lastLogTerm int) {
@@ -256,25 +276,31 @@ func (rf *Raft) lastLogIndexAndTerm() (lastLogIndex int, lastLogTerm int) {
 	return
 }
 func (rf *Raft) convertToCandidate() {
-	DPrintf("{} -> Candidate", rf.getRoleAndId())
+	DPrintf("%s -> Candidate", rf.getRoleAndId())
 	rf.role = Candidate
+	rf.currTerm += 1
 	rf.votedFor = rf.me // vote for self
 }
 
 func (rf *Raft) convertToLeader() {
-	DPrintf("{} -> Leader", rf.getRoleAndId())
+	DPrintf("%s -> Leader", rf.getRoleAndId())
 	rf.role = Leader
 	rf.nextIndex = make([]int, len(rf.peers))
 	for i := 0; i < len(rf.peers); i++ {
 		rf.nextIndex[i] = len(rf.logs) // Init as lastLogIndex + 1
 	}
 	rf.matchIndex = make([]int, len(rf.peers)) // All init as 0
+	rf.startHeartbeatTimers()
 }
 
 func (rf *Raft) convertToFollower() {
-	DPrintf("{} -> Follower", rf.getRoleAndId())
+	if rf.role != Follower {
+		DPrintf("%s -> Follower", rf.getRoleAndId())
+	}
+	if rf.role == Leader {
+		rf.stopHeartbeatTimers()
+	}
 	rf.role = Follower
-	rf.votedFor = -1 // should be persisted short after by caller function
 }
 
 func (rf *Raft) getRoleAndId() string {

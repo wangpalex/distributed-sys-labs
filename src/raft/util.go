@@ -23,3 +23,11 @@ func GetInitElectionTimeout() time.Duration {
 func GetRandElectionTimeout() time.Duration {
 	return time.Duration(ElectionTimeout+rand.Int63()%ElectionTimeout) * time.Millisecond
 }
+
+func min(x, y int) int {
+	if x <= y {
+		return x
+	} else {
+		return y
+	}
+}
