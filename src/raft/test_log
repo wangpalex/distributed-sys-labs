@@ -1,0 +1,272 @@
+S0 Follower: restore persisted states                                                                                                                                       
+                                                          S1 Follower: restore persisted states                                                                             
+                                                                                                                   S2 Follower: restore persisted states                    
+S0 started                                                                                                                                                                  
+                                                          S1 started                                                                                                        
+                                                                                                                   S2 started                                               
+                                                          S1 Follower: convert to Candidate                                                                                 
+                                                          S1 Candidate: start election for term 1                                                                           
+                                                                                                                   S2 Follower: received RequestVote RPC {Term:1            
+                                                                                                                   CandidateId:1 LastLogIndex:0 LastLogTerm:0}              
+                                                                                                                   S2 Follower: persist states                              
+                                                                                                                   S2 Follower: persist states                              
+                                                                                                                   S2 Follower: grant vote for candidate 1                  
+                                                          S1 Candidate: convert to Leader                                                                                   
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received RequestVote RPC {Term:1                                                                                                                               
+CandidateId:1 LastLogIndex:0 LastLogTerm:0}                                                                                                                                 
+S0 Follower: persist states                                                                                                                                                 
+S0 Follower: persist states                                                                                                                                                 
+S0 Follower: grant vote for candidate 1                                                                                                                                     
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+                                                          S1 Leader: sending AppendEntries RPC to peer 2                                                                    
+                                                          S1 Leader: sending AppendEntries RPC to peer 0                                                                    
+                                                                                                                   S2 Follower: received AppendEntries RPC {Term:1          
+                                                                                                                   LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]       
+                                                                                                                   LeaderCommit:0}                                          
+S0 Follower: received AppendEntries RPC {Term:1                                                                                                                             
+LeaderId:1 PrevLogIndex:0 PrevLogTerm:0 Entries:[]                                                                                                                          
+LeaderCommit:0}                                                                                                                                                             
+S0 Follower: got killed                                                                                                                                                     
+                                                          S1 Leader: got killed                                                                                             
+                                                                                                                   S2 Follower: got killed                                  
+############################################################################################################################################################################
+PASS

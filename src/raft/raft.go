@@ -152,11 +152,17 @@ func (rf *Raft) GetState() (int, bool) {
 // term. the third return value is true if this server believes it is
 // the leader.
 func (rf *Raft) Start(command interface{}) (int, int, bool) {
-	index := -1
-	term := -1
-	isLeader := true
-
 	// Your code here (2B).
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	if rf.role != Leader {
+		return -1, -1, false
+	}
+
+	Debug(dClient, "%v: received client command %+v", rf.getIdAndRole(), command)
+	index := rf.lastLogIndex()
+	term := rf.currTerm
+	isLeader := true
 
 	return index, term, isLeader
 }
@@ -173,6 +179,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 func (rf *Raft) Kill() {
 	atomic.StoreInt32(&rf.dead, 1)
 	// Your code here, if desired.
+	Debug(dLog, "%v: got killed", rf.getIdAndRole())
 }
 
 func (rf *Raft) killed() bool {
@@ -181,7 +188,7 @@ func (rf *Raft) killed() bool {
 }
 
 func (rf *Raft) ticker() {
-	DPrintf("Peer %d started", rf.me)
+	Debug(dLog, "S%d started", rf.me)
 	for rf.killed() == false {
 		// Your code here (2A)
 		// Check if a leader election should be started.
@@ -200,6 +207,7 @@ func (rf *Raft) ticker() {
 // after you've implemented snapshots, pass the current snapshot
 // (or nil if there's not yet a snapshot).
 func (rf *Raft) persist() {
+	Debug(dPersist, "%v: persist states", rf.getIdAndRole())
 	// Your code here (2C).
 	// Example:
 	// w := new(bytes.Buffer)
@@ -212,6 +220,7 @@ func (rf *Raft) persist() {
 
 // restore previously persisted state.
 func (rf *Raft) readPersist(data []byte) {
+	Debug(dPersist, "%v: restore persisted states", rf.getIdAndRole())
 	if data == nil || len(data) < 1 { // bootstrap without any state?
 		return
 	}
@@ -276,14 +285,14 @@ func (rf *Raft) lastLogIndex() int {
 }
 
 func (rf *Raft) convertToCandidate() {
-	DPrintf("%s -> Candidate", rf.getRoleAndId())
+	Debug(dLog, "%v: convert to Candidate", rf.getIdAndRole())
 	rf.role = Candidate
 	rf.currTerm += 1
 	rf.votedFor = rf.me // vote for self
 }
 
 func (rf *Raft) convertToLeader() {
-	DPrintf("%s -> Leader", rf.getRoleAndId())
+	Debug(dLog, "%v: convert to Leader", rf.getIdAndRole())
 
 	rf.role = Leader
 	rf.nextIndex = make([]int, len(rf.peers))
@@ -296,7 +305,7 @@ func (rf *Raft) convertToLeader() {
 
 func (rf *Raft) convertToFollower() {
 	if rf.role != Follower {
-		DPrintf("%s -> Follower", rf.getRoleAndId())
+		Debug(dLog, "%v: convert to Follower", rf.getIdAndRole())
 	}
 	if rf.role == Leader {
 		rf.stopHeartbeatTimers()
@@ -310,7 +319,7 @@ func (rf *Raft) convertToFollowerWithLock() {
 	rf.convertToFollower()
 }
 
-func (rf *Raft) getRoleAndId() string {
+func (rf *Raft) getIdAndRole() string {
 	var role string
 	switch rf.role {
 	case Leader:
@@ -320,11 +329,11 @@ func (rf *Raft) getRoleAndId() string {
 	case Follower:
 		role = "Follower"
 	}
-	return fmt.Sprintf("%s %d", role, rf.me)
+	return fmt.Sprintf("S%d %s", rf.me, role)
 }
 
-func (rf *Raft) getRoleAndIdWithLock() string {
+func (rf *Raft) getIdAndRoleWithLock() string {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	return rf.getRoleAndId()
+	return rf.getIdAndRole()
 }

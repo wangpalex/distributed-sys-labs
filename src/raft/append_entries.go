@@ -23,7 +23,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	defer rf.resetElectionTimer()
-	DPrintf("%s: received AppendEntries RPC %+v", rf.getRoleAndId(), *args)
+	Debug(dLog, "%s: received AppendEntries RPC %+v", rf.getIdAndRole(), *args)
 
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
@@ -87,9 +87,9 @@ func (rf *Raft) sendHeartbeat(peer int) {
 	rf.mu.Unlock()
 
 	reply := AppendEntriesReply{}
-	DPrintf("%s: sending AppendEntries RPC to peer %v", rf.getRoleAndIdWithLock(), peer)
+	Debug(dLeader, "%s: sending AppendEntries RPC to peer %v", rf.getIdAndRoleWithLock(), peer)
 	if !rf.sendAppendEntries(peer, &args, &reply) {
-		DPrintf("%s: error sending AppendEntries RPC to peer %d", rf.getRoleAndIdWithLock(), peer)
+		Debug(dError, "%s: error sending AppendEntries RPC to peer %d", rf.getIdAndRoleWithLock(), peer)
 		return
 	}
 

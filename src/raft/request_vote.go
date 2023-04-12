@@ -20,11 +20,11 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
-	DPrintf("%s: received RequestVote RPC %+v", rf.getRoleAndId(), *args)
+	Debug(dLog, "%s: received RequestVote RPC %+v", rf.getIdAndRole(), *args)
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
 		reply.VoteGranted = false
-		DPrintf("%v: reject vote for candidate %v. Reason: my term greater", rf.getRoleAndId(), args.CandidateId)
+		Debug(dVote, "%v: reject vote for candidate %v. Reason: my term greater", rf.getIdAndRole(), args.CandidateId)
 		return
 	}
 
@@ -42,12 +42,12 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		rf.resetElectionTimer() // Reset election timer only after vote to candidate
 		reply.Term = rf.currTerm
 		reply.VoteGranted = true
-		DPrintf("%v: grant vote for candidate %v", rf.getRoleAndId(), args.CandidateId)
+		Debug(dVote, "%v: grant vote for candidate %v", rf.getIdAndRole(), args.CandidateId)
 		return
 	} else {
 		reply.Term = rf.currTerm
 		reply.VoteGranted = false
-		DPrintf("%v: reject vote for candidate %v. Reason: already voted or log not up-to-date", rf.getRoleAndId(), args.CandidateId)
+		Debug(dVote, "%v: reject vote for candidate %v. Reason: already voted or log not up-to-date", rf.getIdAndRole(), args.CandidateId)
 		return
 	}
 }
@@ -66,7 +66,7 @@ func (rf *Raft) startElection() {
 	}
 	rf.convertToCandidate()
 	rf.resetElectionTimer()
-	DPrintf("%s: start election for term %d", rf.getRoleAndId(), rf.currTerm)
+	Debug(dVote, "%s: start election for term %d", rf.getIdAndRole(), rf.currTerm)
 
 	lastLogIndex, lastLogTerm := rf.lastLogIndexAndTerm()
 	args := RequestVoteArgs{
@@ -88,7 +88,7 @@ func (rf *Raft) startElection() {
 		go func(p int) {
 			reply := RequestVoteReply{}
 			if !rf.sendRequestVote(p, &args, &reply) {
-				DPrintf("%s: error sending RequestVote RPC to peer %d", rf.getRoleAndIdWithLock(), p)
+				Debug(dError, "%s: error sending RequestVote RPC to peer %d", rf.getIdAndRoleWithLock(), p)
 				return
 			}
 			// Handle reply
