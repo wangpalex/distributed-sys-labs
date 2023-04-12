@@ -94,6 +94,7 @@ type Raft struct {
 	electionTimer   *time.Timer
 	heartbeatTimers []*time.Timer
 	stopHeartbeat   chan struct{}
+	applyCh         chan ApplyMsg
 }
 
 // the service or tester wants to create a Raft server. the ports
@@ -111,6 +112,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.peers = peers
 	rf.persister = persister
 	rf.me = me
+	rf.applyCh = applyCh
 
 	// Your initialization code here (2A, 2B, 2C).
 	rf.currTerm = 0
@@ -160,9 +162,14 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	}
 
 	Debug(dClient, "%v: received client command %+v", rf.getIdAndRole(), command)
-	index := rf.lastLogIndex()
+	index := len(rf.logs)
 	term := rf.currTerm
 	isLeader := true
+	rf.logs = append(rf.logs, LogEntry{
+		Index:   index,
+		Term:    term,
+		Command: command,
+	})
 
 	return index, term, isLeader
 }

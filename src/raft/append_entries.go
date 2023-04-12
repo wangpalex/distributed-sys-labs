@@ -40,6 +40,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 	if args.PrevLogIndex > rf.lastLogIndex() || rf.logs[args.PrevLogIndex].Term != args.PrevLogTerm {
 		// Do not have matching prev log entry
+		Debug(dLog, "%v: do not have matching prevLogEntry", rf.getIdAndRole())
 		reply.Term = rf.currTerm
 		reply.Success = false
 		reply.NextIndex = rf.lastMatchingIndex(min(args.PrevLogIndex, rf.lastLogIndex()), args.PrevLogTerm) + 1
@@ -52,10 +53,15 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		if idx > rf.lastLogIndex() || rf.logs[idx].Term != args.Entries[i].Term {
 			// Replace all subsequent entries starting at un-matching entry
 			copy(rf.logs[idx:], args.Entries[i:])
+			rf.persist()
 			break
 		}
 		i += 1
 		idx += 1
+	}
+	lastNewIndex := args.PrevLogIndex + 1 + len(args.Entries)
+	if args.LeaderCommit > rf.commitIndex {
+		rf.commitIndex = min(args.LeaderCommit, lastNewIndex)
 	}
 	reply.Term = rf.currTerm
 	reply.Success = true
@@ -109,7 +115,9 @@ func (rf *Raft) sendHeartbeat(peer int) {
 	} else {
 		rf.nextIndex[peer] = reply.NextIndex
 		rf.matchIndex[peer] = reply.NextIndex - 1
-		go rf.tryCommitLog()
+		if len(args.Entries) > 0 {
+			go rf.tryCommitLog()
+		}
 	}
 }
 
