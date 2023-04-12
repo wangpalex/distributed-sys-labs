@@ -134,6 +134,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 // believes it is the leader.
 func (rf *Raft) GetState() (int, bool) {
 	// Your code here (2A).
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
 	return rf.currTerm, rf.role == Leader
 }
 
@@ -301,6 +303,12 @@ func (rf *Raft) convertToFollower() {
 	rf.role = Follower
 }
 
+func (rf *Raft) convertToFollowerWithLock() {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	rf.convertToFollower()
+}
+
 func (rf *Raft) getRoleAndId() string {
 	var role string
 	switch rf.role {
@@ -312,4 +320,10 @@ func (rf *Raft) getRoleAndId() string {
 		role = "Follower"
 	}
 	return fmt.Sprintf("%s %d", role, rf.me)
+}
+
+func (rf *Raft) getRoleAndIdWithLock() string {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	return rf.getRoleAndId()
 }

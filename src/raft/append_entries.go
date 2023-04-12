@@ -64,7 +64,6 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 }
 
 func (rf *Raft) sendAppendEntries(server int, args *AppendEntriesArgs, reply *AppendEntriesReply) bool {
-	DPrintf("%s: sending AppendEntries RPC to peer %v", rf.getRoleAndId(), server)
 	return rf.peers[server].Call("Raft.AppendEntries", args, reply)
 }
 
@@ -88,8 +87,9 @@ func (rf *Raft) sendHeartbeat(peer int) {
 	rf.mu.Unlock()
 
 	reply := AppendEntriesReply{}
+	DPrintf("%s: sending AppendEntries RPC to peer %v", rf.getRoleAndIdWithLock(), peer)
 	if !rf.sendAppendEntries(peer, &args, &reply) {
-		DPrintf("%s: error sending AppendEntries RPC to peer %d", rf.getRoleAndId(), peer)
+		DPrintf("%s: error sending AppendEntries RPC to peer %d", rf.getRoleAndIdWithLock(), peer)
 		return
 	}
 

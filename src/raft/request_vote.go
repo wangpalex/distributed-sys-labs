@@ -63,11 +63,11 @@ func (rf *Raft) startElection() {
 		return // think I am leader, no need to elect
 	}
 
+	rf.mu.Lock()
 	rf.convertToCandidate()
 	rf.resetElectionTimer()
 	DPrintf("%s: start election for term %d", rf.getRoleAndId(), rf.currTerm)
 
-	rf.mu.Lock()
 	lastLogIndex, lastLogTerm := rf.lastLogIndexAndTerm()
 	args := RequestVoteArgs{
 		Term:         rf.currTerm,
@@ -88,27 +88,36 @@ func (rf *Raft) startElection() {
 		go func(p int) {
 			reply := RequestVoteReply{}
 			if !rf.sendRequestVote(p, &args, &reply) {
-				DPrintf("%s: error sending RequestVote RPC to peer %d", rf.getRoleAndId(), p)
+				DPrintf("%s: error sending RequestVote RPC to peer %d", rf.getRoleAndIdWithLock(), p)
 				return
 			}
 			// Handle reply
+			rf.mu.Lock()
 			if reply.Term > rf.currTerm {
 				rf.currTerm = reply.Term
 				rf.votedFor = -1
 				rf.convertToFollower()
 				rf.persist()
 			}
+			rf.mu.Unlock()
 			voteCh <- reply.VoteGranted
 		}(peer)
 	}
 
-	for rf.role == Candidate && rf.currTerm == args.Term {
+	for {
 		/*
 		 * This loop will exit if:
 		 * 1. Collected majority grant or reject.
 		 * 2. Is not candidate anymore (explored higher term and convert to follower)
 		 * 3. currTerm changed (e.g.timeout and started new election)
 		 */
+		rf.mu.Lock()
+		giveUp := (rf.role != Candidate) || (rf.currTerm != args.Term)
+		rf.mu.Unlock()
+		if giveUp {
+			break
+		}
+
 		select {
 		case granted := <-voteCh:
 			numVoted += 1
@@ -125,7 +134,7 @@ func (rf *Raft) startElection() {
 				return
 			} else if numVoted-numGranted >= n/2+1 {
 				// Majority rejected, give up
-				rf.convertToFollower()
+				rf.convertToFollowerWithLock()
 				rf.resetElectionTimer()
 				return
 			}
