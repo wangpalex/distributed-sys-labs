@@ -59,11 +59,11 @@ func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *Reques
 }
 
 func (rf *Raft) startElection() {
+	rf.mu.Lock()
 	if rf.role == Leader {
+		rf.mu.Unlock()
 		return // think I am leader, no need to elect
 	}
-
-	rf.mu.Lock()
 	rf.convertToCandidate()
 	rf.resetElectionTimer()
 	DPrintf("%s: start election for term %d", rf.getRoleAndId(), rf.currTerm)
@@ -127,9 +127,13 @@ func (rf *Raft) startElection() {
 
 			if numGranted >= n/2+1 {
 				// Collected majority grant
+				rf.mu.Lock()
 				if rf.role == Candidate && rf.currTerm == args.Term {
 					rf.convertToLeader()
+					rf.mu.Unlock()
 					rf.broadcastHeartbeat()
+				} else {
+					rf.mu.Unlock()
 				}
 				return
 			} else if numVoted-numGranted >= n/2+1 {

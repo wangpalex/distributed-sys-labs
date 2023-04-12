@@ -284,6 +284,7 @@ func (rf *Raft) convertToCandidate() {
 
 func (rf *Raft) convertToLeader() {
 	DPrintf("%s -> Leader", rf.getRoleAndId())
+
 	rf.role = Leader
 	rf.nextIndex = make([]int, len(rf.peers))
 	for i := 0; i < len(rf.peers); i++ {
