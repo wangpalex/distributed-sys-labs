@@ -29,8 +29,8 @@ import (
 
 const (
 	// In milliseconds
-	ElectionTimeout   = 500
-	HeartbeatInterval = 50
+	ElectionTimeout   = 1000
+	HeartbeatInterval = 100
 )
 
 const (

@@ -23,6 +23,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	defer rf.resetElectionTimer()
+	DPrintf("%s: received AppendEntries RPC %+v", rf.getRoleAndId(), *args)
 
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
@@ -72,9 +73,7 @@ func (rf *Raft) sendHeartbeat(peer int) {
 	if rf.role != Leader {
 		return
 	}
-
-	rf.heartbeatTimers[peer].Stop()
-	defer rf.resetHeartbeatTimer(peer)
+	rf.resetHeartbeatTimer(peer)
 
 	rf.mu.Lock()
 	prevLogIndex, prevLogTerm, entries := rf.getEntriesToSend(peer)
@@ -110,7 +109,7 @@ func (rf *Raft) sendHeartbeat(peer int) {
 	} else {
 		rf.nextIndex[peer] = reply.NextIndex
 		rf.matchIndex[peer] = reply.NextIndex - 1
-		rf.tryCommitLog()
+		go rf.tryCommitLog()
 	}
 }
 
