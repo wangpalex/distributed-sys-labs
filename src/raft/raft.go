@@ -79,9 +79,12 @@ type Raft struct {
 	// Your data here (2A, 2B, 2C).
 
 	// Persistent states
-	currTerm int        // Current term known
-	votedFor int        // Peer id this raft has voted for current term
-	logs     []LogEntry // Log entries
+	currTerm      int        // Current term known
+	votedFor      int        // Peer id this raft has voted for current term
+	logs          []LogEntry // Log entries
+	snapshotIndex int        // Last included log index in snapshot
+	snapshotTerm  int        // Corresponding term of log at snapshotIndex
+	snapshot      []byte     // Snapshot data
 
 	// Volatile states
 	role        int   // My role
@@ -120,6 +123,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.role = Follower
 	rf.commitIndex = 0
 	rf.lastApplied = 0
+	rf.snapshotIndex = 0
+	rf.snapshotTerm = 0
 
 	rf.heartbeatTimers = make([]*time.Timer, len(rf.peers))
 	for p := range rf.peers {
@@ -183,6 +188,23 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	return index, term, isLeader
 }
 
+// the service says it has created a snapshot that has
+// all info up to and including index. this means the
+// service no longer needs the log through (and including)
+// that index. Raft should now trim its log as much as possible.
+func (rf *Raft) Snapshot(index int, snapshot []byte) {
+	// Your code here (2D).
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+
+	snpIdx := rf.snapshotIndex
+	rf.snapshotIndex = index
+	rf.snapshotTerm = rf.logs[index-snpIdx].Term
+	rf.snapshot = snapshot
+	rf.logs = rf.logs[:index-snpIdx]
+	rf.persist()
+}
+
 // the tester doesn't halt goroutines created by Raft after each test,
 // but it does call the Kill() method. your code can use killed() to
 // check whether Kill() has been called. the use of atomic avoids the
@@ -228,6 +250,9 @@ func (rf *Raft) persist() {
 	e.Encode(rf.currTerm)
 	e.Encode(rf.votedFor)
 	e.Encode(rf.logs)
+	e.Encode(rf.snapshotIndex)
+	e.Encode(rf.snapshotTerm)
+	e.Encode(rf.snapshot)
 	rfstates := w.Bytes()
 	rf.persister.Save(rfstates, nil)
 }
@@ -241,17 +266,24 @@ func (rf *Raft) readPersist(data []byte) {
 	// Your code here (2C).
 	r := bytes.NewBuffer(data)
 	d := labgob.NewDecoder(r)
-	var currTerm int
-	var votedFor int
+	var currTerm, votedFor int
 	var logs []LogEntry
+	var snapshotIndex, snapshotTerm int
+	var snapshot []byte
 	if d.Decode(&currTerm) != nil ||
 		d.Decode(&votedFor) != nil ||
-		d.Decode(&logs) != nil {
+		d.Decode(&logs) != nil ||
+		d.Decode(&snapshotIndex) != nil ||
+		d.Decode(&snapshotTerm) != nil ||
+		d.Decode(&snapshot) != nil {
 		Debug(dError, "%v: error decoding persisted states", rf.getIdAndRole())
 	} else {
 		rf.currTerm = currTerm
 		rf.votedFor = votedFor
 		rf.logs = logs
+		rf.snapshotIndex = snapshotIndex
+		rf.snapshotTerm = snapshotTerm
+		rf.snapshot = snapshot
 	}
 }
 
@@ -290,13 +322,14 @@ func (rf *Raft) resetHeartbeatTimer(peer int) {
 }
 
 func (rf *Raft) lastLogIndexAndTerm() (lastLogIndex int, lastLogTerm int) {
-	lastLogIndex = len(rf.logs) - 1
-	lastLogTerm = rf.logs[lastLogIndex].Term
+	rawLastLogIndex := len(rf.logs) - 1
+	lastLogTerm = rf.logs[rawLastLogIndex].Term
+	lastLogIndex = rawLastLogIndex + rf.snapshotIndex
 	return
 }
 
 func (rf *Raft) lastLogIndex() int {
-	return len(rf.logs) - 1
+	return len(rf.logs) - 1 + rf.snapshotIndex
 }
 
 func (rf *Raft) convertToCandidate() {

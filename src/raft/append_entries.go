@@ -40,8 +40,18 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		rf.persist()
 	}
 
-	if args.PrevLogIndex > rf.lastLogIndex() || rf.logs[args.PrevLogIndex].Term != args.PrevLogTerm {
-		// Do not have matching prev log entry
+	snpIdx := rf.snapshotIndex
+	if args.PrevLogIndex < snpIdx {
+		// Need to install snapshot from leader
+		Debug(dLog, "%v: need to install snapshot from leader", rf.getIdAndRole())
+		reply.Term = rf.currTerm
+		reply.Success = false
+		reply.NextIndex = -1 // Indicate need snapshot
+		return
+	}
+
+	if args.PrevLogIndex > rf.lastLogIndex() || rf.logs[args.PrevLogIndex-snpIdx].Term != args.PrevLogTerm {
+		// Logs do not have matching prev log entry
 		Debug(dLog, "%v: do not have matching prevLogEntry", rf.getIdAndRole())
 		reply.Term = rf.currTerm
 		reply.Success = false
@@ -51,9 +61,9 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 	for i, entry := range args.Entries {
 		idx := args.PrevLogIndex + 1 + i
-		if idx > rf.lastLogIndex() || rf.logs[idx].Term != entry.Term {
+		if idx > rf.lastLogIndex() || rf.logs[idx-snpIdx].Term != entry.Term {
 			// Replace all subsequent entries starting at un-matching entry
-			rf.logs = rf.logs[:idx]
+			rf.logs = rf.logs[:idx-snpIdx]
 			rf.logs = append(rf.logs, args.Entries[i:]...)
 			rf.persist()
 			break
@@ -134,15 +144,17 @@ func (rf *Raft) broadcastHeartbeat() {
 
 func (rf *Raft) getEntriesToSend(peer int) (prevLogIndex, prevLogTerm int, entries []LogEntry) {
 	nextIndex := rf.nextIndex[peer]
+	snpIdx := rf.snapshotIndex
 	prevLogIndex = nextIndex - 1
-	prevLogTerm = rf.logs[prevLogIndex].Term
-	entries = append(entries, rf.logs[nextIndex:]...)
+	prevLogTerm = rf.logs[prevLogIndex-snpIdx].Term
+	entries = append(entries, rf.logs[nextIndex-snpIdx:]...)
 	return
 }
 
 func (rf *Raft) lastMatchingIndex(prevLogIndex, prevLogTerm int) int {
 	i := prevLogIndex
-	for i > 0 && rf.logs[i].Term != prevLogTerm {
+	snpIdx := rf.snapshotIndex
+	for i > snpIdx && rf.logs[i-snpIdx].Term != prevLogTerm {
 		i -= 1
 	}
 	return i
@@ -154,9 +166,10 @@ func (rf *Raft) applyLogs() {
 		rf.mu.Unlock()
 		return
 	}
-	baseIdx := rf.lastApplied + 1
+	snpIdx := rf.snapshotIndex
+	baseIdx := rf.lastApplied + 1 - snpIdx
 	applyEntries := make([]LogEntry, 0, rf.commitIndex-rf.lastApplied)
-	applyEntries = append(applyEntries, rf.logs[rf.lastApplied+1:rf.commitIndex+1]...)
+	applyEntries = append(applyEntries, rf.logs[rf.lastApplied+1-snpIdx:rf.commitIndex+1-snpIdx]...)
 	rf.mu.Unlock()
 
 	for i, entry := range applyEntries {
