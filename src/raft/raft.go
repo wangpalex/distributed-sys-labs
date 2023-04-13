@@ -255,7 +255,7 @@ func (rf *Raft) persist() {
 	e.Encode(rf.snapshotIndex)
 	e.Encode(rf.snapshotTerm)
 	rfstates := w.Bytes()
-	rf.persister.Save(rfstates, nil)
+	rf.persister.Save(rfstates, rf.snapshot)
 }
 
 // restore previously persisted state.
@@ -283,6 +283,7 @@ func (rf *Raft) readPersist(data []byte) {
 		rf.snapshotIndex = snapshotIndex
 		rf.snapshotTerm = snapshotTerm
 	}
+	rf.snapshot = rf.persister.ReadSnapshot()
 }
 
 func (rf *Raft) startHeartbeatTimers() {
