@@ -18,14 +18,13 @@ package raft
 //
 
 import (
-	"6.5840/labgob"
 	"bytes"
 	"fmt"
 	"sync"
 	"sync/atomic"
 	"time"
 
-	// "6.5840/labgob"
+	"6.5840/labgob"
 	"6.5840/labrpc"
 )
 
@@ -75,28 +74,26 @@ type Raft struct {
 	persister *Persister          // Object to hold this peer's persisted state
 	me        int                 // this peer's index into peers[]
 	dead      int32               // set by Kill()
+	applyCh   chan ApplyMsg       // Channel to send applied entries or snapshot
 
 	// Your data here (2A, 2B, 2C).
-	// Look at the paper's Figure 2 for a description of what
-	// state a Raft server must maintain.
 
 	// Persistent states
-	currTerm int
-	votedFor int
-	logs     []LogEntry
+	currTerm int        // Current term known
+	votedFor int        // Peer id this raft has voted for current term
+	logs     []LogEntry // Log entries
 
 	// Volatile states
-	role        int
-	commitIndex int
-	lastApplied int
-	nextIndex   []int
-	matchIndex  []int
+	role        int   // My role
+	commitIndex int   // Highest log index known to be committed
+	lastApplied int   // Highest log index applied to state machine
+	nextIndex   []int // Index of next log entry to send to that server
+	matchIndex  []int // Highest log index known to be replicated on that server
 
-	// channels
+	// Timers
 	electionTimer   *time.Timer
 	heartbeatTimers []*time.Timer
 	stopHeartbeat   chan struct{}
-	applyCh         chan ApplyMsg
 }
 
 // the service or tester wants to create a Raft server. the ports
@@ -127,7 +124,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.heartbeatTimers = make([]*time.Timer, len(rf.peers))
 	for p := range rf.peers {
 		timer := time.NewTimer(HeartbeatInterval * time.Millisecond)
-		timer.Stop()
+		timer.Stop() // Restart when elected as leader
 		rf.heartbeatTimers[p] = timer
 	}
 	rf.stopHeartbeat = make(chan struct{})
@@ -180,8 +177,8 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		Term:    term,
 		Command: command,
 	})
-	rf.matchIndex[rf.me] = index
 	rf.persist()
+	rf.matchIndex[rf.me] = index
 
 	return index, term, isLeader
 }
@@ -197,7 +194,6 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 // should call killed() to check whether it should stop.
 func (rf *Raft) Kill() {
 	atomic.StoreInt32(&rf.dead, 1)
-	// Your code here, if desired.
 }
 
 func (rf *Raft) killed() bool {
@@ -206,7 +202,7 @@ func (rf *Raft) killed() bool {
 }
 
 func (rf *Raft) ticker() {
-	Debug(dLog, "S%d started", rf.me)
+	Debug(dLog, "S%d started running", rf.me)
 	for rf.killed() == false {
 		// Your code here (2A)
 		// Check if a leader election should be started.
@@ -227,13 +223,6 @@ func (rf *Raft) ticker() {
 func (rf *Raft) persist() {
 	Debug(dPersist, "%v: persist states", rf.getIdAndRole())
 	// Your code here (2C).
-	// Example:
-	// w := new(bytes.Buffer)
-	// e := labgob.NewEncoder(w)
-	// e.Encode(rf.xxx)
-	// e.Encode(rf.yyy)
-	// raftstate := w.Bytes()
-	// rf.persister.Save(raftstate, nil)
 	w := new(bytes.Buffer)
 	e := labgob.NewEncoder(w)
 	e.Encode(rf.currTerm)
@@ -250,18 +239,6 @@ func (rf *Raft) readPersist(data []byte) {
 		return
 	}
 	// Your code here (2C).
-	// Example:
-	// r := bytes.NewBuffer(data)
-	// d := labgob.NewDecoder(r)
-	// var xxx
-	// var yyy
-	// if d.Decode(&xxx) != nil ||
-	//    d.Decode(&yyy) != nil {
-	//   error...
-	// } else {
-	//   rf.xxx = xxx
-	//   rf.yyy = yyy
-	// }
 	r := bytes.NewBuffer(data)
 	d := labgob.NewDecoder(r)
 	var currTerm int
@@ -327,6 +304,7 @@ func (rf *Raft) convertToCandidate() {
 	rf.role = Candidate
 	rf.currTerm += 1
 	rf.votedFor = rf.me // vote for self
+	// Should be persisted shortly after
 }
 
 func (rf *Raft) convertToLeader() {

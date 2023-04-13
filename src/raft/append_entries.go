@@ -49,28 +49,24 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		return
 	}
 
-	i := 0
-	idx := args.PrevLogIndex + 1 + i
-	for i < len(args.Entries) {
-		if idx > rf.lastLogIndex() || rf.logs[idx].Term != args.Entries[i].Term {
+	for i, entry := range args.Entries {
+		idx := args.PrevLogIndex + 1 + i
+		if idx > rf.lastLogIndex() || rf.logs[idx].Term != entry.Term {
 			// Replace all subsequent entries starting at un-matching entry
 			rf.logs = rf.logs[:idx]
 			rf.logs = append(rf.logs, args.Entries[i:]...)
-			// Debug(dTrace, "%v: log %+v", rf.getIdAndRole(), rf.logs)
 			rf.persist()
 			break
 		}
-		i += 1
-		idx += 1
 	}
-	lastNewIndex := args.PrevLogIndex + 1 + len(args.Entries)
+	lastNewIndex := args.PrevLogIndex + len(args.Entries)
 	if args.LeaderCommit > rf.commitIndex {
 		rf.commitIndex = min(args.LeaderCommit, lastNewIndex)
 		go rf.applyLogs()
 	}
 	reply.Term = rf.currTerm
 	reply.Success = true
-	reply.NextIndex = args.PrevLogIndex + 1 + len(args.Entries)
+	reply.NextIndex = lastNewIndex + 1
 	return
 }
 
@@ -159,8 +155,8 @@ func (rf *Raft) applyLogs() {
 		return
 	}
 	baseIdx := rf.lastApplied + 1
-	applyEntries := make([]LogEntry, rf.commitIndex-rf.lastApplied)
-	copy(applyEntries, rf.logs[rf.lastApplied+1:rf.commitIndex+1])
+	applyEntries := make([]LogEntry, 0, rf.commitIndex-rf.lastApplied)
+	applyEntries = append(applyEntries, rf.logs[rf.lastApplied+1:rf.commitIndex+1]...)
 	rf.mu.Unlock()
 
 	for i, entry := range applyEntries {
@@ -184,13 +180,11 @@ func (rf *Raft) commitLogs() {
 
 	n := len(rf.peers)
 	matchIndex := make([]int, 0, n)
-	for _, val := range rf.matchIndex {
-		matchIndex = append(matchIndex, val)
-	}
-	sort.Sort(sort.Reverse(sort.IntSlice(matchIndex)))
-	Debug(dTrace, "%v: trying to commit, matchIndex=%+v", rf.getIdAndRole(), matchIndex)
+	matchIndex = append(matchIndex, rf.matchIndex...)
+	sort.Ints(matchIndex)
+	Debug(dLog, "%v: trying to commit, matchIndex=%+v", rf.getIdAndRole(), matchIndex)
 	// Find median to be commit index -> replicated on majority
-	newCommitIndex := matchIndex[n/2+1-1]
+	newCommitIndex := matchIndex[n/2]
 	if newCommitIndex > rf.commitIndex {
 		rf.commitIndex = newCommitIndex
 		Debug(dCommit, "%v: commit index set to %v", rf.getIdAndRole(), rf.commitIndex)

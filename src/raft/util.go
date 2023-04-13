@@ -5,15 +5,6 @@ import (
 	"time"
 )
 
-//const Debug = false
-//
-//func DPrintf(format string, a ...interface{}) (n int, err error) {
-//	if Debug {
-//		log.Printf(format, a...)
-//	}
-//	return
-//}
-
 func GetInitElectionTimeout() time.Duration {
 	return time.Duration(rand.Int63()%ElectionTimeout) * time.Millisecond
 }
