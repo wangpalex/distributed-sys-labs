@@ -54,7 +54,9 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	for i < len(args.Entries) {
 		if idx > rf.lastLogIndex() || rf.logs[idx].Term != args.Entries[i].Term {
 			// Replace all subsequent entries starting at un-matching entry
-			copy(rf.logs[idx:], args.Entries[i:])
+			rf.logs = rf.logs[:idx]
+			rf.logs = append(rf.logs, args.Entries[i:]...)
+			// Debug(dTrace, "%v: log %+v", rf.getIdAndRole(), rf.logs)
 			rf.persist()
 			break
 		}
@@ -84,7 +86,7 @@ func (rf *Raft) sendHeartbeat(peer int) {
 		return
 	}
 	rf.resetHeartbeatTimer(peer)
-	
+
 	prevLogIndex, prevLogTerm, entries := rf.getEntriesToSend(peer)
 	args := AppendEntriesArgs{
 		Term:         rf.currTerm,
@@ -138,7 +140,7 @@ func (rf *Raft) getEntriesToSend(peer int) (prevLogIndex, prevLogTerm int, entri
 	nextIndex := rf.nextIndex[peer]
 	prevLogIndex = nextIndex - 1
 	prevLogTerm = rf.logs[prevLogIndex].Term
-	copy(entries, rf.logs[nextIndex:])
+	entries = append(entries, rf.logs[nextIndex:]...)
 	return
 }
 
@@ -152,11 +154,17 @@ func (rf *Raft) lastMatchingIndex(prevLogIndex, prevLogTerm int) int {
 
 func (rf *Raft) applyLogs() {
 	rf.mu.Lock()
-	applyEntries := make([]LogEntry, 0, rf.commitIndex-rf.lastApplied)
+	if rf.commitIndex < rf.lastApplied {
+		rf.mu.Unlock()
+		return
+	}
+	baseIdx := rf.lastApplied + 1
+	applyEntries := make([]LogEntry, rf.commitIndex-rf.lastApplied)
 	copy(applyEntries, rf.logs[rf.lastApplied+1:rf.commitIndex+1])
 	rf.mu.Unlock()
 
-	for idx, entry := range applyEntries {
+	for i, entry := range applyEntries {
+		idx := i + baseIdx
 		cmd := entry.Command
 		rf.applyCh <- ApplyMsg{
 			CommandValid: true,
@@ -174,14 +182,18 @@ func (rf *Raft) commitLogs() {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
+	Debug(dTrace, "%v: trying to commit, matchIndex=%+v", rf.getIdAndRole(), rf.matchIndex)
 	n := len(rf.peers)
 	matchIndex := make([]int, 0, n)
 	for _, val := range rf.matchIndex {
 		matchIndex = append(matchIndex, val)
 	}
-	sort.Ints(matchIndex)
+	sort.Sort(sort.Reverse(sort.IntSlice(matchIndex)))
 	// Find median to be commit index -> replicated on majority
-	rf.commitIndex = matchIndex[2/n+1]
-	Debug(dCommit, "%v: commit index set to %v", rf.getIdAndRole(), rf.commitIndex)
-	go rf.applyLogs()
+	newCommitIndex := matchIndex[2/n+1-1]
+	if newCommitIndex > rf.commitIndex {
+		rf.commitIndex = newCommitIndex
+		Debug(dCommit, "%v: commit index set to %v", rf.getIdAndRole(), rf.commitIndex)
+		go rf.applyLogs()
+	}
 }

@@ -169,8 +169,8 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		return -1, -1, false
 	}
 
-	Debug(dClient, "%v: received client command %+v", rf.getIdAndRole(), command)
 	index := len(rf.logs)
+	Debug(dClient, "%v: received client command %+v, index=%v", rf.getIdAndRole(), command, index)
 	term := rf.currTerm
 	isLeader := true
 	rf.logs = append(rf.logs, LogEntry{
@@ -179,6 +179,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		Command: command,
 	})
 	rf.matchIndex[rf.me] = index
+	rf.persist()
 
 	return index, term, isLeader
 }
@@ -195,7 +196,6 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 func (rf *Raft) Kill() {
 	atomic.StoreInt32(&rf.dead, 1)
 	// Your code here, if desired.
-	Debug(dLog, "%v: got killed", rf.getIdAndRole())
 }
 
 func (rf *Raft) killed() bool {
@@ -307,7 +307,7 @@ func (rf *Raft) convertToCandidate() {
 }
 
 func (rf *Raft) convertToLeader() {
-	Debug(dLog, "%v: convert to Leader", rf.getIdAndRole())
+	Debug(dVote, "%v: convert to Leader", rf.getIdAndRole())
 
 	rf.role = Leader
 	rf.nextIndex = make([]int, len(rf.peers))
@@ -338,7 +338,7 @@ func (rf *Raft) getIdAndRole() string {
 	var role string
 	switch rf.role {
 	case Leader:
-		role = "Leader"
+		role = fmt.Sprintf("Leader@T%d", rf.currTerm)
 	case Candidate:
 		role = "Candidate"
 	case Follower:

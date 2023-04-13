@@ -466,6 +466,7 @@ func TestRejoin2B(t *testing.T) {
 
 	// leader network failure
 	leader1 := cfg.checkOneLeader()
+	Debug(dTest, "----- Disconnect 1st leader -----")
 	cfg.disconnect(leader1)
 
 	// make old leader try to agree on some entries
@@ -478,14 +479,17 @@ func TestRejoin2B(t *testing.T) {
 
 	// new leader network failure
 	leader2 := cfg.checkOneLeader()
+	Debug(dTest, "----- Disconnect 2nd leader -----")
 	cfg.disconnect(leader2)
 
 	// old leader connected again
+	Debug(dTest, "----- Rejoin 1st leader -----")
 	cfg.connect(leader1)
 
 	cfg.one(104, 2, true)
 
 	// all together now
+	Debug(dTest, "----- Rejoin 2nd leader -----")
 	cfg.connect(leader2)
 
 	cfg.one(105, servers, true)
@@ -503,6 +507,7 @@ func TestBackup2B(t *testing.T) {
 	cfg.one(rand.Int(), servers, true)
 
 	// put leader and one follower in a partition
+	Debug(dTest, "Put 1st leader and one follower in a partition")
 	leader1 := cfg.checkOneLeader()
 	cfg.disconnect((leader1 + 2) % servers)
 	cfg.disconnect((leader1 + 3) % servers)
@@ -515,10 +520,12 @@ func TestBackup2B(t *testing.T) {
 
 	time.Sleep(RaftElectionTimeout / 2)
 
+	Debug(dTest, "Disconnect 1st leader and one follower")
 	cfg.disconnect((leader1 + 0) % servers)
 	cfg.disconnect((leader1 + 1) % servers)
 
 	// allow other partition to recover
+	Debug(dTest, "Reconnect the other 3 servers partition")
 	cfg.connect((leader1 + 2) % servers)
 	cfg.connect((leader1 + 3) % servers)
 	cfg.connect((leader1 + 4) % servers)
@@ -534,6 +541,7 @@ func TestBackup2B(t *testing.T) {
 	if leader2 == other {
 		other = (leader2 + 1) % servers
 	}
+	Debug(dTest, "Disconnect one follower in 2nd leader group")
 	cfg.disconnect(other)
 
 	// lots more commands that won't commit
@@ -544,6 +552,7 @@ func TestBackup2B(t *testing.T) {
 	time.Sleep(RaftElectionTimeout / 2)
 
 	// bring original leader back to life,
+	Debug(dTest, "1st leader connect back to work")
 	for i := 0; i < servers; i++ {
 		cfg.disconnect(i)
 	}
