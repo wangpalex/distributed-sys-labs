@@ -182,15 +182,15 @@ func (rf *Raft) commitLogs() {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
-	Debug(dTrace, "%v: trying to commit, matchIndex=%+v", rf.getIdAndRole(), rf.matchIndex)
 	n := len(rf.peers)
 	matchIndex := make([]int, 0, n)
 	for _, val := range rf.matchIndex {
 		matchIndex = append(matchIndex, val)
 	}
 	sort.Sort(sort.Reverse(sort.IntSlice(matchIndex)))
+	Debug(dTrace, "%v: trying to commit, matchIndex=%+v", rf.getIdAndRole(), matchIndex)
 	// Find median to be commit index -> replicated on majority
-	newCommitIndex := matchIndex[2/n+1-1]
+	newCommitIndex := matchIndex[n/2+1-1]
 	if newCommitIndex > rf.commitIndex {
 		rf.commitIndex = newCommitIndex
 		Debug(dCommit, "%v: commit index set to %v", rf.getIdAndRole(), rf.commitIndex)
