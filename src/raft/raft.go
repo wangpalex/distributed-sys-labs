@@ -18,6 +18,8 @@ package raft
 //
 
 import (
+	"6.5840/labgob"
+	"bytes"
 	"fmt"
 	"sync"
 	"sync/atomic"
@@ -232,6 +234,13 @@ func (rf *Raft) persist() {
 	// e.Encode(rf.yyy)
 	// raftstate := w.Bytes()
 	// rf.persister.Save(raftstate, nil)
+	w := new(bytes.Buffer)
+	e := labgob.NewEncoder(w)
+	e.Encode(rf.currTerm)
+	e.Encode(rf.votedFor)
+	e.Encode(rf.logs)
+	rfstates := w.Bytes()
+	rf.persister.Save(rfstates, nil)
 }
 
 // restore previously persisted state.
@@ -253,6 +262,20 @@ func (rf *Raft) readPersist(data []byte) {
 	//   rf.xxx = xxx
 	//   rf.yyy = yyy
 	// }
+	r := bytes.NewBuffer(data)
+	d := labgob.NewDecoder(r)
+	var currTerm int
+	var votedFor int
+	var logs []LogEntry
+	if d.Decode(&currTerm) != nil ||
+		d.Decode(&votedFor) != nil ||
+		d.Decode(&logs) != nil {
+		Debug(dError, "%v: error decoding persisted states", rf.getIdAndRole())
+	} else {
+		rf.currTerm = currTerm
+		rf.votedFor = votedFor
+		rf.logs = logs
+	}
 }
 
 func (rf *Raft) startHeartbeatTimers() {
