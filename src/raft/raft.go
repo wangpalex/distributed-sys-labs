@@ -173,8 +173,8 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		return -1, -1, false
 	}
 
-	index := len(rf.logs)
-	Debug(dClient, "%v: received client command %+v, index=%v", rf.getIdAndRole(), command, index)
+	index := len(rf.logs) + rf.snapshotIndex
+	Debug(dClient, "%v: receive command %+v, index=%v", rf.getIdAndRole(), command, index)
 	term := rf.currTerm
 	isLeader := true
 	rf.logs = append(rf.logs, LogEntry{
@@ -196,13 +196,15 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	// Your code here (2D).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
+	Debug(dSnap, "%v: receive snapshot, index=%v", rf.getIdAndRole(), index)
 
 	snpIdx := rf.snapshotIndex
 	rf.snapshotIndex = index
 	rf.snapshotTerm = rf.logs[index-snpIdx].Term
 	rf.snapshot = snapshot
-	rf.logs = rf.logs[:index-snpIdx]
+	rf.logs = rf.logs[index-snpIdx:]
 	rf.persist()
+	Debug(dTrace, "%v: truncated log %+v", rf.getIdAndRole(), rf.logs)
 }
 
 // the tester doesn't halt goroutines created by Raft after each test,
@@ -224,7 +226,7 @@ func (rf *Raft) killed() bool {
 }
 
 func (rf *Raft) ticker() {
-	Debug(dLog, "S%d started running", rf.me)
+	Debug(dLog, "S%d start running", rf.me)
 	for rf.killed() == false {
 		// Your code here (2A)
 		// Check if a leader election should be started.
@@ -252,7 +254,6 @@ func (rf *Raft) persist() {
 	e.Encode(rf.logs)
 	e.Encode(rf.snapshotIndex)
 	e.Encode(rf.snapshotTerm)
-	e.Encode(rf.snapshot)
 	rfstates := w.Bytes()
 	rf.persister.Save(rfstates, nil)
 }
@@ -269,13 +270,11 @@ func (rf *Raft) readPersist(data []byte) {
 	var currTerm, votedFor int
 	var logs []LogEntry
 	var snapshotIndex, snapshotTerm int
-	var snapshot []byte
 	if d.Decode(&currTerm) != nil ||
 		d.Decode(&votedFor) != nil ||
 		d.Decode(&logs) != nil ||
 		d.Decode(&snapshotIndex) != nil ||
-		d.Decode(&snapshotTerm) != nil ||
-		d.Decode(&snapshot) != nil {
+		d.Decode(&snapshotTerm) != nil {
 		Debug(dError, "%v: error decoding persisted states", rf.getIdAndRole())
 	} else {
 		rf.currTerm = currTerm
@@ -283,7 +282,6 @@ func (rf *Raft) readPersist(data []byte) {
 		rf.logs = logs
 		rf.snapshotIndex = snapshotIndex
 		rf.snapshotTerm = snapshotTerm
-		rf.snapshot = snapshot
 	}
 }
 

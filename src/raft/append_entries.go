@@ -167,7 +167,7 @@ func (rf *Raft) applyLogs() {
 		return
 	}
 	snpIdx := rf.snapshotIndex
-	baseIdx := rf.lastApplied + 1 - snpIdx
+	baseIdx := rf.lastApplied + 1
 	applyEntries := make([]LogEntry, 0, rf.commitIndex-rf.lastApplied)
 	applyEntries = append(applyEntries, rf.logs[rf.lastApplied+1-snpIdx:rf.commitIndex+1-snpIdx]...)
 	rf.mu.Unlock()
