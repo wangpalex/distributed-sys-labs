@@ -49,7 +49,7 @@ const (
 // snapshots) on the applyCh, but set CommandValid to false for these
 // other uses.
 type ApplyMsg struct {
-	CommandValid bool
+	CommandValid bool // True if this msg is for newly committed log entry
 	Command      interface{}
 	CommandIndex int
 
@@ -122,6 +122,14 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.commitIndex = 0
 	rf.lastApplied = 0
 
+	rf.heartbeatTimers = make([]*time.Timer, len(rf.peers))
+	for p := range rf.peers {
+		timer := time.NewTimer(HeartbeatInterval * time.Millisecond)
+		timer.Stop()
+		rf.heartbeatTimers[p] = timer
+	}
+	rf.stopHeartbeat = make(chan struct{})
+
 	// initialize from state persisted before a crash
 	rf.readPersist(persister.ReadRaftState())
 
@@ -170,6 +178,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 		Term:    term,
 		Command: command,
 	})
+	rf.matchIndex[rf.me] = index
 
 	return index, term, isLeader
 }
@@ -247,19 +256,18 @@ func (rf *Raft) readPersist(data []byte) {
 }
 
 func (rf *Raft) startHeartbeatTimers() {
-	rf.heartbeatTimers = make([]*time.Timer, len(rf.peers))
-	rf.stopHeartbeat = make(chan struct{})
 	for peer := range rf.peers {
 		if peer == rf.me {
 			continue
 		}
-		rf.heartbeatTimers[peer] = time.NewTimer(HeartbeatInterval)
+		rf.heartbeatTimers[peer].Reset(HeartbeatInterval * time.Millisecond)
 		go func(p int) {
 			for !rf.killed() {
 				select {
 				case <-rf.heartbeatTimers[p].C:
 					go rf.sendHeartbeat(p)
 				case <-rf.stopHeartbeat:
+					rf.heartbeatTimers[p].Stop()
 					return
 				}
 			}
@@ -268,7 +276,7 @@ func (rf *Raft) startHeartbeatTimers() {
 }
 
 func (rf *Raft) stopHeartbeatTimers() {
-	close(rf.stopHeartbeat)
+	rf.stopHeartbeat <- struct{}{}
 }
 
 func (rf *Raft) resetElectionTimer() {
