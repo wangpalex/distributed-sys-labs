@@ -368,6 +368,7 @@ func (rf *Raft) convertToFollower() {
 	if rf.role == Leader {
 		rf.stopHeartbeatTimers()
 	}
+	rf.resetElectionTimer()
 	rf.role = Follower
 }
 
