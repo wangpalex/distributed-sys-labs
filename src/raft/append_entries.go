@@ -218,5 +218,7 @@ func (rf *Raft) commitLogs() {
 		rf.commitIndex = median
 		Debug(dCommit, "%v: set commit index to %v", rf.getIdAndRole(), rf.commitIndex)
 		go rf.applyLogs()
+	} else if rf.logs[median].Term != rf.currTerm {
+		Debug(dCommit, "%v: cannot commit as the entry not created in this term", rf.getIdAndRole())
 	}
 }
