@@ -34,11 +34,12 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 			// No existing entry match snapshot index
 			// Discard log and use snapshot as first log entry
 			rf.logs = rf.logs[len(rf.logs)-1:]
-			rf.logs[0] = LogEntry{Index: args.SnapshotIndex, Term: args.SnapshotTerm}
 		} else {
 			// Truncate entries before snapshot index
 			rf.discardLogsBefore(args.SnapshotIndex)
 		}
+		// Rewrite logs[0] to match snapshot
+		rf.logs[0] = LogEntry{Index: args.SnapshotIndex, Term: args.SnapshotTerm}
 		Debug(dSnap, "%v: set snapshot, index=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.logs)
 		rf.commitIndex = max(rf.commitIndex, rf.snapshotIndex)
 		if rf.lastApplied < rf.snapshotIndex {
