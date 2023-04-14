@@ -206,9 +206,16 @@ func (rf *Raft) commitLogs() {
 	sort.Ints(matchIndex)
 	Debug(dLog, "%v: trying to commit, matchIndex=%+v", rf.getIdAndRole(), matchIndex)
 	// Find median to be commit index -> replicated on majority
-	newCommitIndex := matchIndex[n/2]
-	if newCommitIndex > rf.commitIndex {
-		rf.commitIndex = newCommitIndex
+	median := matchIndex[n/2]
+	/*
+	 * Must check index term matches currTerm.
+	 * An entry is committed ONLY IF (it's replicated
+	 * on majority AND it matches leader's term).
+	 * Refer to Figure 8 of raft-extended paper.
+	 */
+	okToCommit := median > rf.commitIndex && rf.logs[median].Term == rf.currTerm
+	if okToCommit {
+		rf.commitIndex = median
 		Debug(dCommit, "%v: set commit index to %v", rf.getIdAndRole(), rf.commitIndex)
 		go rf.applyLogs()
 	}
