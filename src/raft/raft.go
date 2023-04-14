@@ -138,6 +138,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.commitIndex = rf.snapshotIndex
 	rf.lastApplied = rf.snapshotIndex
 
+	Debug(dTrace, "%v: snpIdx=%v, snpTerm=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.snapshotTerm, rf.logs)
+
 	rf.electionTimer = time.NewTimer(GetInitElectionTimeout())
 	// start ticker goroutine to start elections
 	go rf.ticker()
