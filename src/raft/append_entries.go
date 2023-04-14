@@ -42,11 +42,11 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 
 	snpIdx := rf.snapshotIndex
 	if args.PrevLogIndex < snpIdx {
-		// Need to install snapshot from leader
-		Debug(dLog, "%v: need to install snapshot from leader", rf.getIdAndRole())
+		// First entry is included in snapshot, ask leader to align and try again.
+		Debug(dTrace, "%v: prevIndex=%v < snpIdx=%v, reply nextIdx=%v", rf.getIdAndRole(), args.PrevLogIndex, snpIdx, rf.snapshotIndex+1)
 		reply.Term = rf.currTerm
 		reply.Success = false
-		reply.NextIndex = -1 // Indicate need snapshot
+		reply.NextIndex = snpIdx + 1
 		return
 	}
 
