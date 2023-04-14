@@ -98,14 +98,14 @@ func (rf *Raft) sendSnapshot(peer int) {
 }
 
 func (rf *Raft) discardLogsBefore(index int) {
-	var to int
+	var from int
 	for i, entry := range rf.logs {
 		if entry.Index == index {
-			to = i
+			from = i
 			break
 		}
 	}
-	rf.logs = rf.logs[:to]
+	rf.logs = rf.logs[from:]
 }
 
 func (rf *Raft) applySnapshot() {
