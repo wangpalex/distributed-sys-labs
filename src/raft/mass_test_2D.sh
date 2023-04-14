@@ -3,6 +3,6 @@ TestSnapshotBasic2D TestSnapshotInstall2D TestSnapshotInstallUnreliable2D TestSn
 TestSnapshotInstallUnCrash2D TestSnapshotAllCrash2D TestSnapshotInit2D \
 -p 20 \
 -n 1000 \
--o ./test_logs \
+-o ./saved_2D_logs \
 -R \
 -v

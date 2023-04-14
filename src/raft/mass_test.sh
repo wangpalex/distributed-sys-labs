@@ -1,6 +1,6 @@
 ./dstest.py \
-2B 2C 2D \
+2A 2B 2C 2D \
 -p 20 \
 -n 1000 \
--o ./test_logs \
+-o ./saved_logs \
 -R
