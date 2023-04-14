@@ -1,16 +1,105 @@
 package raft
 
 type InstallSnapshotArgs struct {
+	Term          int
+	LeaderId      int
+	SnapshotIndex int    // Last included index of snapshot.
+	SnapshotTerm  int    // Last included entry term of snapshot.
+	data          []byte // Raw bytes of snapshot data chunk.
+	offset        int    // Offset of the data chunk
+	done          bool   // True if is the last chunk
 }
 
 type InstallSnapshotReply struct {
+	Term int
 }
 
 // InstallSnapshot RPC handler
 func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply) {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	Debug(dSnap, "%v: receive InstallSnapshot RPC, snapshot(index=%v, term=%v)", rf.getIdAndRole(), args.SnapshotIndex, args.SnapshotTerm)
 
+	if args.Term < rf.currTerm {
+		reply.Term = rf.currTerm
+		return
+	}
+
+	if rf.snapshotIndex < args.SnapshotIndex {
+		rf.snapshot = args.data
+		rf.snapshotIndex = args.SnapshotIndex
+		rf.snapshotTerm = args.SnapshotTerm
+
+		if rf.logs[len(rf.logs)-1].Index < args.SnapshotIndex {
+			// No existing entry match snapshot index
+			// Discard log and use snapshot as first log entry
+			rf.logs = rf.logs[len(rf.logs)-1:]
+			rf.logs[0] = LogEntry{Index: args.SnapshotIndex, Term: args.Term}
+		} else {
+			// Truncate entries before snapshot index
+			rf.discardLogsBefore(args.SnapshotIndex)
+		}
+		Debug(dSnap, "%v: set snapshot index=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.logs)
+	}
+
+	reply.Term = rf.currTerm
+	return
 }
 
 func (rf *Raft) sendInstallSnapshot(server int, args *InstallSnapshotArgs, reply *InstallSnapshotReply) bool {
 	return rf.peers[server].Call("Raft.InstallSnapshot", args, reply)
+}
+
+func (rf *Raft) sendSnapshot(peer int) {
+	rf.mu.Lock()
+	if rf.role != Leader {
+		rf.mu.Unlock()
+		return
+	}
+	Debug(dSnap, "%v: sending snapshot to peer %v", rf.getIdAndRole(), peer)
+
+	dataChunk := make([]byte, 0, len(rf.snapshot))
+	dataChunk = append(dataChunk, rf.snapshot...)
+	args := InstallSnapshotArgs{
+		Term:          rf.currTerm,
+		LeaderId:      rf.me,
+		SnapshotIndex: rf.snapshotIndex,
+		SnapshotTerm:  rf.snapshotTerm,
+		data:          dataChunk,
+		offset:        0,
+		done:          true, // Simplification: send snapshot always in one chunk
+	}
+	rf.mu.Unlock()
+
+	reply := InstallSnapshotReply{}
+	if !rf.sendInstallSnapshot(peer, &args, &reply) {
+		Debug(dError, "%v: error sending snapshot to peer %v", rf.getIdAndRoleWithLock(), peer)
+		return
+	}
+
+	// Handle reply
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	if reply.Term > rf.currTerm {
+		rf.currTerm = reply.Term
+		rf.votedFor = -1
+		rf.convertToFollower()
+		rf.persist()
+		return
+	}
+
+	rf.nextIndex[peer] = args.SnapshotIndex + 1
+	rf.matchIndex[peer] = args.SnapshotIndex
+	go rf.commitLogs()
+}
+
+func (rf *Raft) discardLogsBefore(index int) {
+	var to int
+	for i, entry := range rf.logs {
+		if entry.Index == index {
+			to = i
+			break
+		}
+	}
+	rf.logs = rf.logs[:to]
 }
