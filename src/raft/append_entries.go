@@ -25,7 +25,10 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
     rf.mu.Lock()
     defer rf.mu.Unlock()
     defer rf.resetElectionTimer()
-    Debug(dLog, "%s: received AppendEntries RPC, log entry first=%+v, last=%+v", rf.getIdAndRole(), args.Entries[0], args.Entries[len(args.Entries)-1])
+    Debug(dLog, "%s: received AppendEntries RPC", rf.getIdAndRole())
+    if len(args.Entries) > 0 {
+        Debug(dLog, "%v: RPC entries first=%+v, last=%+v", rf.getIdAndRole(), args.Entries[0], args.Entries[len(args.Entries)-1])
+    }
 
     if args.Term < rf.currTerm {
         reply.Term = rf.currTerm
