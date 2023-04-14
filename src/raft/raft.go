@@ -121,8 +121,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.votedFor = -1
 	rf.logs = make([]LogEntry, 1) // Log starts at index 1
 	rf.role = Follower
-	rf.commitIndex = 0
-	rf.lastApplied = 0
 	rf.snapshotIndex = 0
 	rf.snapshotTerm = 0
 
@@ -135,7 +133,10 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.stopHeartbeat = make(chan struct{})
 
 	// initialize from state persisted before a crash
-	rf.readPersist(persister.ReadRaftState())
+	rf.readPersist()
+	// Set commit index and last applied index to at least snapshot index
+	rf.commitIndex = rf.snapshotIndex
+	rf.lastApplied = rf.snapshotIndex
 
 	rf.electionTimer = time.NewTimer(GetInitElectionTimeout())
 	// start ticker goroutine to start elections
@@ -196,7 +197,7 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	// Your code here (2D).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	Debug(dSnap, "%v: receive snapshot, index=%v", rf.getIdAndRole(), index)
+	Debug(dSnap, "%v: taking snapshot, index=%v", rf.getIdAndRole(), index)
 
 	snpIdx := rf.snapshotIndex
 	rf.snapshotIndex = index
@@ -245,8 +246,19 @@ func (rf *Raft) ticker() {
 // after you've implemented snapshots, pass the current snapshot
 // (or nil if there's not yet a snapshot).
 func (rf *Raft) persist() {
-	Debug(dPersist, "%v: persist states", rf.getIdAndRole())
+	Debug(dPersist, "%v: persisted states and snapshot", rf.getIdAndRole())
 	// Your code here (2C).
+	rfstates := rf.encodeStates()
+	rf.persister.Save(rfstates, rf.snapshot)
+}
+
+func (rf *Raft) readPersist() {
+	Debug(dPersist, "%v: restored persisted states and snapshot", rf.getIdAndRole())
+	rf.decodeStates(rf.persister.ReadRaftState())
+	rf.snapshot = rf.persister.ReadSnapshot()
+}
+
+func (rf *Raft) encodeStates() []byte {
 	w := new(bytes.Buffer)
 	e := labgob.NewEncoder(w)
 	e.Encode(rf.currTerm)
@@ -254,13 +266,10 @@ func (rf *Raft) persist() {
 	e.Encode(rf.logs)
 	e.Encode(rf.snapshotIndex)
 	e.Encode(rf.snapshotTerm)
-	rfstates := w.Bytes()
-	rf.persister.Save(rfstates, rf.snapshot)
+	return w.Bytes()
 }
 
-// restore previously persisted state.
-func (rf *Raft) readPersist(data []byte) {
-	Debug(dPersist, "%v: restore persisted states", rf.getIdAndRole())
+func (rf *Raft) decodeStates(data []byte) {
 	if data == nil || len(data) < 1 { // bootstrap without any state?
 		return
 	}
@@ -283,7 +292,6 @@ func (rf *Raft) readPersist(data []byte) {
 		rf.snapshotIndex = snapshotIndex
 		rf.snapshotTerm = snapshotTerm
 	}
-	rf.snapshot = rf.persister.ReadSnapshot()
 }
 
 func (rf *Raft) startHeartbeatTimers() {

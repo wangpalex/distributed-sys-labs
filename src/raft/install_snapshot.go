@@ -18,7 +18,7 @@ type InstallSnapshotReply struct {
 func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	Debug(dSnap, "%v: receive InstallSnapshot RPC, snapshot(index=%v, term=%v)", rf.getIdAndRole(), args.SnapshotIndex, args.SnapshotTerm)
+	Debug(dSnap, "%v: received InstallSnapshot RPC, snapshot(index=%v, term=%v)", rf.getIdAndRole(), args.SnapshotIndex, args.SnapshotTerm)
 
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
@@ -34,12 +34,12 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 			// No existing entry match snapshot index
 			// Discard log and use snapshot as first log entry
 			rf.logs = rf.logs[len(rf.logs)-1:]
-			rf.logs[0] = LogEntry{Index: args.SnapshotIndex, Term: args.Term}
+			rf.logs[0] = LogEntry{Index: args.SnapshotIndex, Term: args.SnapshotTerm}
 		} else {
 			// Truncate entries before snapshot index
 			rf.discardLogsBefore(args.SnapshotIndex)
 		}
-		Debug(dSnap, "%v: set snapshot index=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.logs)
+		Debug(dSnap, "%v: set snapshot, index=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.logs)
 		rf.commitIndex = max(rf.commitIndex, rf.snapshotIndex)
 		if rf.lastApplied < rf.snapshotIndex {
 			go rf.applySnapshot()
@@ -124,6 +124,6 @@ func (rf *Raft) applySnapshot() {
 	rf.applyCh <- msg
 	rf.mu.Lock()
 	rf.lastApplied = msg.SnapshotIndex
-	Debug(dLog2, "%v: applied snapshot index=%v", rf.getIdAndRole(), msg.SnapshotIndex)
+	Debug(dLog2, "%v: applied snapshot, index=%v", rf.getIdAndRole(), msg.SnapshotIndex)
 	rf.mu.Unlock()
 }
