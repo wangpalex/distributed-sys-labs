@@ -18,7 +18,7 @@ type InstallSnapshotReply struct {
 func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapshotReply) {
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	Debug(dSnap, "%v: received InstallSnapshot RPC, snapshot(index=%v, term=%v)", rf.getIdAndRole(), args.SnapshotIndex, args.SnapshotTerm)
+	Debug(dSnap, "%v: received InstallSnapshot RPC, snapshot{index=%v, term=%v}", rf.getIdAndRole(), args.SnapshotIndex, args.SnapshotTerm)
 
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
@@ -32,10 +32,10 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 
 		if rf.logs[len(rf.logs)-1].Index < args.SnapshotIndex {
 			// No existing entry match snapshot index
-			// Discard log and use snapshot as first log entry
+			// Discard logs and use snapshot as first log entry
 			rf.logs = rf.logs[len(rf.logs)-1:]
 		} else {
-			// Truncate entries before snapshot index
+			// Discard entries before snapshot index
 			rf.discardLogsBefore(args.SnapshotIndex)
 		}
 		// Rewrite logs[0] to match snapshot
@@ -47,7 +47,7 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 		}
 		rf.persist()
 	} else {
-		Debug(dSnap, "%v: ignored snapshot, my snpIdx=%v, snpTerm=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.snapshotTerm, rf.logs)
+		Debug(dSnap, "%v: ignored install-snapshot, my snpIdx=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.snapshotTerm, rf.logs)
 	}
 
 	reply.Term = rf.currTerm
@@ -64,7 +64,7 @@ func (rf *Raft) sendSnapshot(peer int) {
 		rf.mu.Unlock()
 		return
 	}
-	Debug(dSnap, "%v: sending snapshot to peer %v", rf.getIdAndRole(), peer)
+	Debug(dSnap, "%v: sending snapshot{index=%v, term=%v} to peer %v", rf.getIdAndRole(), rf.snapshotIndex, rf.snapshotTerm, peer)
 
 	// Simplification: send snapshot always in one chunk
 	dataChunk := make([]byte, 0, len(rf.snapshot))
@@ -127,6 +127,6 @@ func (rf *Raft) applySnapshot() {
 	rf.applyCh <- msg
 	rf.mu.Lock()
 	rf.lastApplied = msg.SnapshotIndex
-	Debug(dLog2, "%v: applied snapshot, index=%v", rf.getIdAndRole(), msg.SnapshotIndex)
+	Debug(dLog2, "%v: applied snapshot{index=%v, term=%v}", rf.getIdAndRole(), msg.SnapshotIndex, msg.SnapshotTerm)
 	rf.mu.Unlock()
 }

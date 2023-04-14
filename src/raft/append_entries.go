@@ -43,7 +43,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	snpIdx := rf.snapshotIndex
 	if args.PrevLogIndex < snpIdx {
 		// First entry is included in snapshot, ask leader to align and try again.
-		Debug(dTrace, "%v: prevIndex=%v < snpIdx=%v, reply nextIdx=%v", rf.getIdAndRole(), args.PrevLogIndex, snpIdx, rf.snapshotIndex+1)
+		Debug(dTrace, "%v: prevIndex=%v < snpIdx=%v, ask leader align nextIdx and retry", rf.getIdAndRole(), args.PrevLogIndex, snpIdx, rf.snapshotIndex+1)
 		reply.Term = rf.currTerm
 		reply.Success = false
 		reply.NextIndex = snpIdx + 1
