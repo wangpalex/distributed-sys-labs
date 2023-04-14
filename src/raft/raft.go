@@ -76,7 +76,7 @@ type Raft struct {
 	dead      int32               // set by Kill()
 	applyCh   chan ApplyMsg       // Channel to send applied entries or snapshot
 
-	// Your data here (2A, 2B, 2C).
+	// Your Data here (2A, 2B, 2C).
 
 	// Persistent states
 	currTerm      int        // Current term known
@@ -84,7 +84,7 @@ type Raft struct {
 	logs          []LogEntry // Log entries
 	snapshotIndex int        // Last included log index in snapshot
 	snapshotTerm  int        // Corresponding term of log at snapshotIndex
-	snapshot      []byte     // Snapshot data
+	snapshot      []byte     // Snapshot Data
 
 	// Volatile states
 	role        int   // My role

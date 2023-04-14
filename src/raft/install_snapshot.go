@@ -5,9 +5,9 @@ type InstallSnapshotArgs struct {
 	LeaderId      int
 	SnapshotIndex int    // Last included index of snapshot.
 	SnapshotTerm  int    // Last included entry term of snapshot.
-	data          []byte // Raw bytes of snapshot data chunk.
-	offset        int    // Offset of the data chunk
-	done          bool   // True if is the last chunk
+	Data          []byte // Raw bytes of snapshot Data chunk.
+	Offset        int    // Offset of the Data chunk
+	Done          bool   // True if is the last chunk
 }
 
 type InstallSnapshotReply struct {
@@ -26,7 +26,7 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	}
 
 	if rf.snapshotIndex < args.SnapshotIndex {
-		rf.snapshot = args.data
+		rf.snapshot = args.Data
 		rf.snapshotIndex = args.SnapshotIndex
 		rf.snapshotTerm = args.SnapshotTerm
 
@@ -40,6 +40,11 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 			rf.discardLogsBefore(args.SnapshotIndex)
 		}
 		Debug(dSnap, "%v: set snapshot index=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.logs)
+		rf.commitIndex = max(rf.commitIndex, rf.snapshotIndex)
+		if rf.lastApplied < rf.snapshotIndex {
+			go rf.applySnapshot()
+		}
+		rf.persist()
 	}
 
 	reply.Term = rf.currTerm
@@ -58,6 +63,7 @@ func (rf *Raft) sendSnapshot(peer int) {
 	}
 	Debug(dSnap, "%v: sending snapshot to peer %v", rf.getIdAndRole(), peer)
 
+	// Simplification: send snapshot always in one chunk
 	dataChunk := make([]byte, 0, len(rf.snapshot))
 	dataChunk = append(dataChunk, rf.snapshot...)
 	args := InstallSnapshotArgs{
@@ -65,9 +71,7 @@ func (rf *Raft) sendSnapshot(peer int) {
 		LeaderId:      rf.me,
 		SnapshotIndex: rf.snapshotIndex,
 		SnapshotTerm:  rf.snapshotTerm,
-		data:          dataChunk,
-		offset:        0,
-		done:          true, // Simplification: send snapshot always in one chunk
+		Data:          dataChunk,
 	}
 	rf.mu.Unlock()
 
@@ -102,4 +106,24 @@ func (rf *Raft) discardLogsBefore(index int) {
 		}
 	}
 	rf.logs = rf.logs[:to]
+}
+
+func (rf *Raft) applySnapshot() {
+	rf.mu.Lock()
+	data := make([]byte, 0, len(rf.snapshot))
+	data = append(data, rf.snapshot...)
+	msg := ApplyMsg{
+		CommandValid:  false,
+		SnapshotValid: true,
+		Snapshot:      data,
+		SnapshotTerm:  rf.snapshotTerm,
+		SnapshotIndex: rf.snapshotIndex,
+	}
+	rf.mu.Unlock()
+
+	rf.applyCh <- msg
+	rf.mu.Lock()
+	rf.lastApplied = msg.SnapshotIndex
+	Debug(dLog2, "%v: applied snapshot index=%v", rf.getIdAndRole(), msg.SnapshotIndex)
+	rf.mu.Unlock()
 }

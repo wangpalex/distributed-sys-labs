@@ -3,7 +3,7 @@ package raft
 import "sort"
 
 type AppendEntriesArgs struct {
-    // Your data here (2A, 2B).
+    // Your Data here (2A, 2B).
     Term         int
     LeaderId     int
     PrevLogIndex int
@@ -13,7 +13,7 @@ type AppendEntriesArgs struct {
 }
 
 type AppendEntriesReply struct {
-    // Your data here (2A).
+    // Your Data here (2A).
     Term      int
     Success   bool
     NextIndex int // Suggested next index for leader
@@ -93,6 +93,12 @@ func (rf *Raft) sendHeartbeat(peer int) {
     }
     rf.resetHeartbeatTimer(peer)
 
+    if rf.nextIndex[peer] <= rf.snapshotIndex {
+        rf.mu.Unlock()
+        go rf.sendSnapshot(peer)
+        return
+    }
+
     prevLogIndex, prevLogTerm, entries := rf.getEntriesToSend(peer)
     args := AppendEntriesArgs{
         Term:         rf.currTerm,
@@ -163,7 +169,8 @@ func (rf *Raft) lastMatchingIndex(prevLogIndex, prevLogTerm int) int {
 
 func (rf *Raft) applyLogs() {
     rf.mu.Lock()
-    if rf.commitIndex < rf.lastApplied {
+    if rf.lastApplied < rf.snapshotIndex ||
+        rf.commitIndex <= rf.lastApplied {
         rf.mu.Unlock()
         return
     }
