@@ -235,6 +235,7 @@ func (rf *Raft) ticker() {
 		// Check if a leader election should be started.
 		select {
 		case <-rf.electionTimer.C:
+			Debug(dTimer, "%v: election timer fires", rf.getIdAndRoleWithLock())
 			go rf.startElection()
 		}
 	}
