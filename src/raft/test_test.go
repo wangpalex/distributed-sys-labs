@@ -557,6 +557,7 @@ func TestBackup2B(t *testing.T) {
 
 	// bring original leader back to life,
 	Debug(dTest, "1st leader connect back to work")
+	Debug(dTest, "Disconnect all servers")
 	for i := 0; i < servers; i++ {
 		cfg.disconnect(i)
 	}
