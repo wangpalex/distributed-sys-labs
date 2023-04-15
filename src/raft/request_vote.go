@@ -62,7 +62,6 @@ func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *Reques
 }
 
 func (rf *Raft) startElection() {
-	Debug(dTrace, "%v: Entered startElection, trying to take lock", rf.getIdAndRole())
 	rf.mu.Lock()
 	Debug(dTimer, "%v: reset election timer upon calling startElection()", rf.getIdAndRole())
 	rf.resetElectionTimer()
