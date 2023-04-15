@@ -11,6 +11,8 @@ package raft
 //   start agreement on a new log entry
 // rf.GetState() (term, isLeader)
 //   ask a Raft for its current term, and whether it thinks it is leader
+// rf.Snapshot(index int, snapshot []byte)
+//   ask a Raft to save the snapshot and discard logs preceding snapshot index
 // ApplyMsg
 //   each time a new entry is committed to the log, each Raft peer
 //   should send an ApplyMsg to the service (or tester)
@@ -40,22 +42,12 @@ const (
 	Follower
 )
 
-// as each Raft peer becomes aware that successive log entries are
-// committed, the peer should send an ApplyMsg to the service (or
-// tester) on the same server, via the applyCh passed to Make(). set
-// CommandValid to true to indicate that the ApplyMsg contains a newly
-// committed log entry.
-//
-// in part 2D you'll want to send other kinds of messages (e.g.,
-// snapshots) on the applyCh, but set CommandValid to false for these
-// other uses.
 type ApplyMsg struct {
 	CommandValid bool // True if this msg is for newly committed log entry
 	Command      interface{}
 	CommandIndex int
 
-	// For 2D:
-	SnapshotValid bool
+	SnapshotValid bool // True if this msg is for snapshot
 	Snapshot      []byte
 	SnapshotTerm  int
 	SnapshotIndex int
@@ -75,8 +67,6 @@ type Raft struct {
 	me        int                 // this peer's index into peers[]
 	dead      int32               // set by Kill()
 	applyCh   chan ApplyMsg       // Channel to send applied entries or snapshot
-
-	// Your Data here (2A, 2B, 2C).
 
 	// Persistent states
 	currTerm      int        // Current term known
@@ -99,15 +89,6 @@ type Raft struct {
 	stopHeartbeat   chan struct{}
 }
 
-// the service or tester wants to create a Raft server. the ports
-// of all the Raft servers (including this one) are in peers[]. this
-// server's port is peers[me]. all the servers' peers[] arrays
-// have the same order. persister is a place for this server to
-// save its persistent state, and also initially holds the most
-// recent saved state, if any. applyCh is a channel on which the
-// tester or service expects Raft to send ApplyMsg messages.
-// Make() must return quickly, so it should start goroutines
-// for any long-running work.
 func Make(peers []*labrpc.ClientEnd, me int,
 	persister *Persister, applyCh chan ApplyMsg) *Raft {
 	rf := &Raft{}
@@ -116,7 +97,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.me = me
 	rf.applyCh = applyCh
 
-	// Your initialization code here (2A, 2B, 2C).
 	rf.currTerm = 0
 	rf.votedFor = -1
 	rf.logs = make([]LogEntry, 1) // Log starts at index 1
@@ -138,7 +118,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.commitIndex = rf.snapshotIndex
 	rf.lastApplied = rf.snapshotIndex
 
-	Debug(dTrace, "%v: snpIdx=%v, snpTerm=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.snapshotTerm, rf.logs)
+	// Debug(dTrace, "%v: snpIdx=%v, snpTerm=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.snapshotTerm, rf.logs)
 
 	rf.electionTimer = time.NewTimer(GetInitElectionTimeout())
 	// start ticker goroutine to start elections
@@ -150,7 +130,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 // return currentTerm and whether this server
 // believes it is the leader.
 func (rf *Raft) GetState() (int, bool) {
-	// Your code here (2A).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	return rf.currTerm, rf.role == Leader
@@ -169,7 +148,6 @@ func (rf *Raft) GetState() (int, bool) {
 // term. the third return value is true if this server believes it is
 // the leader.
 func (rf *Raft) Start(command interface{}) (int, int, bool) {
-	// Your code here (2B).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 	if rf.role != Leader {
@@ -231,7 +209,6 @@ func (rf *Raft) killed() bool {
 func (rf *Raft) ticker() {
 	Debug(dLog, "S%d start running", rf.me)
 	for rf.killed() == false {
-		// Your code here (2A)
 		// Check if a leader election should be started.
 		select {
 		case <-rf.electionTimer.C:
@@ -250,7 +227,6 @@ func (rf *Raft) ticker() {
 // (or nil if there's not yet a snapshot).
 func (rf *Raft) persist() {
 	Debug(dPersist, "%v: persisted states and snapshot", rf.getIdAndRole())
-	// Your code here (2C).
 	rfstates := rf.encodeStates()
 	rf.persister.Save(rfstates, rf.snapshot)
 }
@@ -276,7 +252,6 @@ func (rf *Raft) decodeStates(data []byte) {
 	if data == nil || len(data) < 1 { // bootstrap without any state?
 		return
 	}
-	// Your code here (2C).
 	r := bytes.NewBuffer(data)
 	d := labgob.NewDecoder(r)
 	var currTerm, votedFor int

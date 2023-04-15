@@ -1,7 +1,6 @@
 package raft
 
 type RequestVoteArgs struct {
-	// Your Data here (2A, 2B).
 	Term         int
 	CandidateId  int
 	LastLogIndex int
@@ -9,14 +8,12 @@ type RequestVoteArgs struct {
 }
 
 type RequestVoteReply struct {
-	// Your Data here (2A).
 	Term        int
 	VoteGranted bool
 }
 
 // RequestVote RPC handler.
 func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
-	// Your code here (2A, 2B).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
 
@@ -24,7 +21,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	if args.Term < rf.currTerm {
 		reply.Term = rf.currTerm
 		reply.VoteGranted = false
-		Debug(dVote, "%v: reject vote for candidate %v. Reason: my term higher", rf.getIdAndRole(), args.CandidateId)
+		Debug(dVote, "%v: reject vote for candidate %v. Reason: my term higher.", rf.getIdAndRole(), args.CandidateId)
 		return
 	}
 
@@ -39,7 +36,6 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 		rf.compareLog(args.LastLogIndex, args.LastLogTerm) {
 		rf.votedFor = args.CandidateId
 		rf.persist()
-		Debug(dTimer, "%v: reset election timer after vote for candidate %v", rf.getIdAndRole(), args.CandidateId)
 		rf.resetElectionTimer() // Reset election timer only after vote to candidate
 		reply.Term = rf.currTerm
 		reply.VoteGranted = true
@@ -48,7 +44,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
 	} else {
 		reply.Term = rf.currTerm
 		reply.VoteGranted = false
-		Debug(dVote, "%v: reject vote for candidate %v. Reason: already voted or candidate log not up-to-date", rf.getIdAndRole(), args.CandidateId)
+		Debug(dVote, "%v: reject vote for candidate %v. Reason: already voted or candidate log not up-to-date.", rf.getIdAndRole(), args.CandidateId)
 		Debug(dVote, "%v: candidate last log entry={idx=%v,term=%v}, my last log entry={idx=%v,term=%v}",
 			rf.getIdAndRole(), args.LastLogIndex, args.LastLogTerm, rf.lastLogIndex(), rf.logs[rf.lastLogIndex()-rf.snapshotIndex].Term)
 		return
@@ -63,11 +59,10 @@ func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *Reques
 
 func (rf *Raft) startElection() {
 	rf.mu.Lock()
-	Debug(dTimer, "%v: reset election timer upon calling startElection()", rf.getIdAndRole())
 	rf.resetElectionTimer()
 	if rf.role == Leader {
 		rf.mu.Unlock()
-		return // think I am leader, no need to elect
+		return
 	}
 	rf.convertToCandidate()
 	Debug(dVote, "%s: start election for term %d", rf.getIdAndRole(), rf.currTerm)
@@ -112,8 +107,9 @@ func (rf *Raft) startElection() {
 		/*
 		 * This loop will exit if:
 		 * 1. Collected majority grant or reject.
-		 * 2. Is not candidate anymore (explored higher term and converted to follower)
-		 * 3. currTerm changed (e.g.timeout and started new election)
+		 * 2. Is not candidate anymore (explored higher term and converted to follower).
+		 * 3. currTerm changed (e.g.timeout and started new election).
+		 * 4. The raft instance is killed.
 		 */
 		rf.mu.Lock()
 		giveUp := (rf.role != Candidate) || (rf.currTerm != args.Term)
@@ -142,7 +138,6 @@ func (rf *Raft) startElection() {
 			} else if numVoted-numGranted >= n/2+1 {
 				// Majority rejected, give up
 				rf.convertToFollowerWithLock()
-				Debug(dTimer, "%v: reset election timer after receiving majority rejection", rf.getIdAndRoleWithLock())
 				rf.resetElectionTimer()
 				return
 			}

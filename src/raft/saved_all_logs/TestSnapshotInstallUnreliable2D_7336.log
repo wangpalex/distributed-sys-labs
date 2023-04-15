@@ -1,6 +1,0 @@
-Test (2D): install snapshots (disconnect+unreliable) ...
---- FAIL: TestSnapshotInstallUnreliable2D (28.17s)
-    config.go:601: one(1457052444904134337) failed to reach agreement
-FAIL
-exit status 1
-FAIL	6.5840/raft	28.177s
