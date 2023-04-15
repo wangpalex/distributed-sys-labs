@@ -24,8 +24,6 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	// Your code here (2A, 2B).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
-	defer rf.resetElectionTimer()
-	defer Debug(dTimer, "%v: reset election timer after receiving AE RPC", rf.getIdAndRole())
 	Debug(dLog, "%s: received AppendEntries RPC", rf.getIdAndRole())
 	if len(args.Entries) > 0 {
 		Debug(dLog, "%v: RPC entries first=%+v, last=%+v", rf.getIdAndRole(), args.Entries[0], args.Entries[len(args.Entries)-1])
@@ -36,6 +34,10 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		reply.Success = false
 		return
 	}
+
+	// The leader is not stale
+	defer rf.resetElectionTimer()
+	defer Debug(dTimer, "%v: reset election timer after receiving AE RPC from current leader", rf.getIdAndRole())
 
 	if args.Term > rf.currTerm {
 		rf.currTerm = args.Term

@@ -509,6 +509,7 @@ func TestBackup2B(t *testing.T) {
 	// put leader and one follower in a partition
 	Debug(dTest, "Put 1st leader and one follower in a partition")
 	leader1 := cfg.checkOneLeader()
+	Debug(dTest, "Disconnect server S%v,S%v,S%v", (leader1+2)%servers, (leader1+3)%servers, (leader1+4)%servers)
 	cfg.disconnect((leader1 + 2) % servers)
 	cfg.disconnect((leader1 + 3) % servers)
 	cfg.disconnect((leader1 + 4) % servers)
@@ -521,11 +522,13 @@ func TestBackup2B(t *testing.T) {
 	time.Sleep(RaftElectionTimeout / 2)
 
 	Debug(dTest, "Disconnect 1st leader and one follower")
+	Debug(dTest, "Disconnect server S%v,S%v", (leader1+0)%servers, (leader1+1)%servers)
 	cfg.disconnect((leader1 + 0) % servers)
 	cfg.disconnect((leader1 + 1) % servers)
 
 	// allow other partition to recover
 	Debug(dTest, "Reconnect the other 3 servers partition")
+	Debug(dTest, "Connect server S%v,S%v,S%v", (leader1+2)%servers, (leader1+3)%servers, (leader1+4)%servers)
 	cfg.connect((leader1 + 2) % servers)
 	cfg.connect((leader1 + 3) % servers)
 	cfg.connect((leader1 + 4) % servers)
@@ -542,6 +545,7 @@ func TestBackup2B(t *testing.T) {
 		other = (leader2 + 1) % servers
 	}
 	Debug(dTest, "Disconnect one follower in 2nd leader group")
+	Debug(dTest, "Disconnect server S%v", other)
 	cfg.disconnect(other)
 
 	// lots more commands that won't commit
@@ -556,6 +560,7 @@ func TestBackup2B(t *testing.T) {
 	for i := 0; i < servers; i++ {
 		cfg.disconnect(i)
 	}
+	Debug(dTest, "Connect server S%v,S%v,S%v", (leader1+0)%servers, (leader1+1)%servers, other)
 	cfg.connect((leader1 + 0) % servers)
 	cfg.connect((leader1 + 1) % servers)
 	cfg.connect(other)
