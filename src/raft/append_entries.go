@@ -34,10 +34,9 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		reply.Success = false
 		return
 	}
-
 	// The leader is not stale
-	rf.resetElectionTimer()
 	Debug(dTimer, "%v: reset election timer after receiving AE RPC from current leader", rf.getIdAndRole())
+	rf.resetElectionTimer()
 
 	if args.Term > rf.currTerm {
 		rf.currTerm = args.Term
