@@ -369,6 +369,7 @@ func (rf *Raft) convertToFollower() {
 	if rf.role == Leader {
 		rf.stopHeartbeatTimers()
 	}
+	Debug(dTimer, "%v: reset election timer after convert to follower", rf.getIdAndRole())
 	rf.resetElectionTimer()
 	rf.role = Follower
 }
