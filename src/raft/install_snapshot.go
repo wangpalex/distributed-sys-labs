@@ -49,7 +49,7 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 		}
 		rf.persist()
 	} else {
-		Debug(dSnap, "%v: ignored install-snapshot, my snpIdx=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.snapshotTerm, rf.logs)
+		Debug(dSnap, "%v: ignored install-snapshot, my snpIdx=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.logs)
 	}
 
 	reply.Term = rf.currTerm
