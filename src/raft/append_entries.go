@@ -92,6 +92,7 @@ func (rf *Raft) sendHeartbeat(peer int) {
 		rf.mu.Unlock()
 		return
 	}
+	Debug(dTimer, "%v: reset heartbeat timer of peer %v", rf.getIdAndRole(), peer)
 	rf.resetHeartbeatTimer(peer)
 
 	if rf.nextIndex[peer] <= rf.snapshotIndex {
