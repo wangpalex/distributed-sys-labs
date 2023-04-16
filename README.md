@@ -3,3 +3,6 @@
 - [x] Lab 2: [Raft](https://pdos.csail.mit.edu/6.824/labs/lab-raft.html)
 - [ ] Lab 3: [Fault-Tolerant K/V Store](http://nil.csail.mit.edu/6.824/2020/labs/lab-kvraft.html)
 - [ ] Lab 4: [Sharded K/V Service](http://nil.csail.mit.edu/6.824/2020/labs/lab-shard.html)
+
+### Tests
+![raft_tests](images/raft_tests.png)
