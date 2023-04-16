@@ -66,7 +66,8 @@ func (rf *Raft) sendSnapshot(peer int) {
 		rf.mu.Unlock()
 		return
 	}
-	Debug(dSnap, "%v: sending snapshot{index=%v, term=%v} to peer %v", rf.getIdAndRole(), rf.snapshotIndex, rf.snapshotTerm, peer)
+	idAndRole := rf.getIdAndRole()
+	Debug(dSnap, "%v: sending snapshot{index=%v, term=%v} to peer %v", idAndRole, rf.snapshotIndex, rf.snapshotTerm, peer)
 
 	// Simplification: send snapshot always in one chunk
 	dataChunk := make([]byte, 0, len(rf.snapshot))
@@ -81,7 +82,6 @@ func (rf *Raft) sendSnapshot(peer int) {
 	rf.mu.Unlock()
 
 	reply := InstallSnapshotReply{}
-	idAndRole := rf.getIdAndRoleWithLock()
 	if !rf.sendInstallSnapshot(peer, &args, &reply) {
 		Debug(dError, "%v: error sending snapshot to peer %v", idAndRole, peer)
 		return

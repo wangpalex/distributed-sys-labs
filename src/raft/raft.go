@@ -185,7 +185,7 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	rf.snapshot = snapshot
 	rf.logs = rf.logs[index-snpIdx:]
 	rf.persist()
-	Debug(dTrace, "%v: truncated log %+v", rf.getIdAndRole(), rf.logs)
+	Debug(dSnap, "%v: truncated log %+v", rf.getIdAndRole(), rf.logs)
 }
 
 // the tester doesn't halt goroutines created by Raft after each test,
@@ -232,7 +232,7 @@ func (rf *Raft) persist() {
 }
 
 func (rf *Raft) readPersist() {
-	Debug(dPersist, "%v: restored persisted states and snapshot", rf.getIdAndRole())
+	Debug(dPersist, "%v: restored persistent states and snapshot", rf.getIdAndRole())
 	rf.decodeStates(rf.persister.ReadRaftState())
 	rf.snapshot = rf.persister.ReadSnapshot()
 }
@@ -262,7 +262,7 @@ func (rf *Raft) decodeStates(data []byte) {
 		d.Decode(&logs) != nil ||
 		d.Decode(&snapshotIndex) != nil ||
 		d.Decode(&snapshotTerm) != nil {
-		Debug(dError, "%v: error decoding persisted states", rf.getIdAndRole())
+		Debug(dError, "%v: error decoding persistent states", rf.getIdAndRole())
 	} else {
 		rf.currTerm = currTerm
 		rf.votedFor = votedFor
