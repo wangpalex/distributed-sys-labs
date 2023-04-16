@@ -11,4 +11,5 @@ TestSnapshotInstallUnCrash2D TestSnapshotAllCrash2D TestSnapshotInit2D \
 -p 50 \
 -n 5000 \
 -o ./saved_all_logs \
--R
+-R \
+-v
