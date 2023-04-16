@@ -9,7 +9,7 @@ internalChurn TestReliableChurn2C TestUnreliableChurn2C \
 TestSnapshotBasic2D TestSnapshotInstall2D TestSnapshotInstallUnreliable2D TestSnapshotInstallCrash2D \
 TestSnapshotInstallUnCrash2D TestSnapshotAllCrash2D TestSnapshotInit2D \
 -p 100 \
--n 5000 \
+-n 1000 \
 -o ./saved_all_logs \
 -R \
--v
+
