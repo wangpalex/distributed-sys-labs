@@ -86,8 +86,9 @@ func (rf *Raft) startElection() {
 		}
 		go func(p int) {
 			reply := RequestVoteReply{}
+			idAndRole := rf.getIdAndRoleWithLock()
 			if !rf.sendRequestVote(p, &args, &reply) {
-				Debug(dError, "%s: error sending RequestVote RPC to peer %d", rf.getIdAndRoleWithLock(), p)
+				Debug(dError, "%s: error sending RequestVote RPC to peer %d", idAndRole, p)
 				return
 			}
 			// Handle reply

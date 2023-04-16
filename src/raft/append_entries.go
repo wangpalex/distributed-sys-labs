@@ -112,9 +112,10 @@ func (rf *Raft) sendHeartbeat(peer int) {
 	rf.mu.Unlock()
 
 	reply := AppendEntriesReply{}
-	Debug(dLeader, "%s: sending AppendEntries RPC to peer %v", rf.getIdAndRoleWithLock(), peer)
+	idAndRole := rf.getIdAndRoleWithLock()
+	Debug(dLeader, "%s: sending AppendEntries RPC to peer %v", idAndRole, peer)
 	if !rf.sendAppendEntries(peer, &args, &reply) {
-		Debug(dError, "%s: error sending AppendEntries RPC to peer %d", rf.getIdAndRoleWithLock(), peer)
+		Debug(dError, "%s: error sending AppendEntries RPC to peer %d", idAndRole, peer)
 		return
 	}
 
@@ -133,8 +134,8 @@ func (rf *Raft) sendHeartbeat(peer int) {
 		rf.nextIndex[peer] = reply.NextIndex
 	} else {
 		rf.nextIndex[peer] = reply.NextIndex
-		rf.matchIndex[peer] = reply.NextIndex - 1
-		if len(args.Entries) > 0 {
+		if rf.matchIndex[peer] < reply.NextIndex-1 {
+			rf.matchIndex[peer] = reply.NextIndex - 1
 			go rf.commitLogs()
 		}
 	}
@@ -206,16 +207,18 @@ func (rf *Raft) commitLogs() {
 	sort.Ints(matchIndex)
 	Debug(dLog, "%v: trying to commit, matchIndex=%+v", rf.getIdAndRole(), matchIndex)
 	// Median of match indices is guaranteed to be replicated on majority
-	median := matchIndex[n/2]
+	medianMatchIdx := matchIndex[n/2]
 	/*
 	 * Must check index term matches currTerm.
 	 * An entry is committed ONLY IF (it's replicated
 	 * on majority AND it matches leader's term).
 	 * Refer to Figure 8 of raft-extended paper.
 	 */
-	okToCommit := median > rf.commitIndex && rf.logs[median-snpIdx].Term == rf.currTerm
+	okToCommit := medianMatchIdx > rf.commitIndex &&
+		medianMatchIdx <= rf.lastLogIndex() &&
+		rf.logs[medianMatchIdx-snpIdx].Term == rf.currTerm
 	if okToCommit {
-		rf.commitIndex = median
+		rf.commitIndex = medianMatchIdx
 		Debug(dCommit, "%v: set commit index to %v", rf.getIdAndRole(), rf.commitIndex)
 		go rf.applyLogs()
 	}
