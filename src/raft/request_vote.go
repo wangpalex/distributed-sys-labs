@@ -36,6 +36,7 @@ func (rf *Raft) RequestVote(args *RequestVoteArgs, reply *RequestVoteReply) {
         rf.compareLog(args.LastLogIndex, args.LastLogTerm) {
         rf.votedFor = args.CandidateId
         rf.persist()
+        Debug(dTimer, "%v: reset election timer after vote for S%v Candidate@T%v", rf.getIdAndRole(), args.CandidateId, args.Term)
         rf.resetElectionTimer() // Reset election timer only after vote to candidate
         reply.Term = rf.currTerm
         reply.VoteGranted = true
@@ -59,6 +60,7 @@ func (rf *Raft) sendRequestVote(server int, args *RequestVoteArgs, reply *Reques
 
 func (rf *Raft) startElection() {
     rf.mu.Lock()
+    Debug(dTimer, "%v: reset election timer when election timer fires", rf.getIdAndRole())
     rf.resetElectionTimer()
     if rf.role == Leader {
         rf.mu.Unlock()
@@ -138,6 +140,7 @@ func (rf *Raft) startElection() {
                 return
             } else if numVoted-numGranted >= n/2+1 {
                 // Majority rejected, give up
+                Debug(dTimer, "%v: reset election timer after rejected by majority", rf.getIdAndRole())
                 rf.convertToFollowerWithLock()
                 rf.resetElectionTimer()
                 return

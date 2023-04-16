@@ -25,6 +25,7 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 		return
 	}
 	// The leader is not stale
+	Debug(dTimer, "%v: reset election timer after receiving InstallSnapshot from S%v Leader@T%v", rf.getIdAndRole(), args.LeaderId, args.Term)
 	rf.resetElectionTimer()
 
 	if rf.snapshotIndex < args.SnapshotIndex {

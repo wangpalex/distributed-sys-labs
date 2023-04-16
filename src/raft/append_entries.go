@@ -32,6 +32,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		return
 	}
 	// The leader is not stale
+	Debug(dTimer, "%v: reset election timer after receiving AppendEntries from S%v Leader@T%v", rf.getIdAndRole(), args.LeaderId, args.Term)
 	rf.resetElectionTimer()
 
 	if args.Term > rf.currTerm {
