@@ -8,7 +8,7 @@ TestFigure82C TestUnreliableAgree2C TestFigure8Unreliable2C \
 internalChurn TestReliableChurn2C TestUnreliableChurn2C \
 TestSnapshotBasic2D TestSnapshotInstall2D TestSnapshotInstallUnreliable2D TestSnapshotInstallCrash2D \
 TestSnapshotInstallUnCrash2D TestSnapshotAllCrash2D TestSnapshotInit2D \
--p 50 \
+-p 100 \
 -n 5000 \
 -o ./saved_all_logs \
 -R \
