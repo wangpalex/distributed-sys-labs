@@ -1,0 +1,646 @@
+000118 PERS S0 Follower@T0: restored persistent states and snapshot
+000122 LOG1 S0 start running
+000123 PERS S1 Follower@T0: restored persistent states and snapshot
+000124 PERS S2 Follower@T0: restored persistent states and snapshot
+Test (2D): crash and restart all servers ...
+000125 LOG1 S1 start running
+000125 LOG1 S2 start running
+000125 TIMR S2 Follower@T0: election timer fires
+000125 LOG1 S2 Follower@T0: convert to Candidate
+000126 VOTE S2 Candidate@T1: start election for term 1
+000130 LOG1 S1 Follower@T0: received RequestVote RPC {Term:1 CandidateId:2 LastLogIndex:0 LastLogTerm:0}
+000130 PERS S1 Follower@T1: persisted states and snapshot
+000131 PERS S1 Follower@T1: persisted states and snapshot
+000132 VOTE S1 Follower@T1: grant vote for candidate 2
+000133 VOTE S2 Candidate@T1: convert to Leader
+000134 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+000137 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+000140 LOG1 S0 Follower@T0: received RequestVote RPC {Term:1 CandidateId:2 LastLogIndex:0 LastLogTerm:0}
+000141 PERS S0 Follower@T1: persisted states and snapshot
+000141 PERS S0 Follower@T1: persisted states and snapshot
+000141 VOTE S0 Follower@T1: grant vote for candidate 2
+000143 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+000145 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+000683 CLNT S2 Leader@T1: receive command 3565418510062380807, index=1
+000686 PERS S2 Leader@T1: persisted states and snapshot
+000687 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+000691 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+000692 LOG1 S0 Follower@T1: RPC entries first={Index:1 Command:3565418510062380807 Term:1}, last={Index:1 Command:3565418510062380807 Term:1}
+000692 PERS S0 Follower@T1: persisted states and snapshot
+000698 LOG1 S2 Leader@T1: trying to commit, matchIndex=[0 1 1]
+000698 CMIT S2 Leader@T1: set commit index to 1
+000698 LOG2 S2 Leader@T1: applied log index=1, command=3565418510062380807
+000699 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+000704 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+000704 LOG1 S1 Follower@T1: RPC entries first={Index:1 Command:3565418510062380807 Term:1}, last={Index:1 Command:3565418510062380807 Term:1}
+000706 PERS S1 Follower@T1: persisted states and snapshot
+000708 LOG1 S2 Leader@T1: trying to commit, matchIndex=[1 1 1]
+000709 LOG2 S1 Follower@T1: applied log index=1, command=3565418510062380807
+001938 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+001943 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+001946 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+001948 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+001949 LOG2 S0 Follower@T1: applied log index=1, command=3565418510062380807
+002140 CLNT S2 Leader@T1: receive command 6149512399480942825, index=2
+002141 PERS S2 Leader@T1: persisted states and snapshot
+002448 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+002451 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+002451 LOG1 S1 Follower@T1: RPC entries first={Index:2 Command:6149512399480942825 Term:1}, last={Index:2 Command:6149512399480942825 Term:1}
+002451 PERS S1 Follower@T1: persisted states and snapshot
+002453 LOG1 S2 Leader@T1: trying to commit, matchIndex=[1 2 2]
+002453 CMIT S2 Leader@T1: set commit index to 2
+002453 LOG2 S2 Leader@T1: applied log index=2, command=6149512399480942825
+002453 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+002455 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+002455 LOG1 S0 Follower@T1: RPC entries first={Index:2 Command:6149512399480942825 Term:1}, last={Index:2 Command:6149512399480942825 Term:1}
+002456 PERS S0 Follower@T1: persisted states and snapshot
+002457 LOG1 S2 Leader@T1: trying to commit, matchIndex=[2 2 2]
+002457 LOG2 S0 Follower@T1: applied log index=2, command=6149512399480942825
+002950 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+002953 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+002954 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+002955 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+002956 LOG2 S1 Follower@T1: applied log index=2, command=6149512399480942825
+003000 CLNT S2 Leader@T1: receive command 8979278321788558761, index=3
+003000 PERS S2 Leader@T1: persisted states and snapshot
+003454 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+003455 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+003458 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+003458 LOG1 S0 Follower@T1: RPC entries first={Index:3 Command:8979278321788558761 Term:1}, last={Index:3 Command:8979278321788558761 Term:1}
+003459 PERS S0 Follower@T1: persisted states and snapshot
+003461 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+003461 LOG1 S1 Follower@T1: RPC entries first={Index:3 Command:8979278321788558761 Term:1}, last={Index:3 Command:8979278321788558761 Term:1}
+003461 PERS S1 Follower@T1: persisted states and snapshot
+003463 LOG1 S2 Leader@T1: trying to commit, matchIndex=[2 3 3]
+003463 CMIT S2 Leader@T1: set commit index to 3
+003463 LOG2 S2 Leader@T1: applied log index=3, command=8979278321788558761
+003465 LOG1 S2 Leader@T1: trying to commit, matchIndex=[3 3 3]
+003959 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+003962 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+003964 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+003965 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+003966 LOG2 S0 Follower@T1: applied log index=3, command=8979278321788558761
+003967 LOG2 S1 Follower@T1: applied log index=3, command=8979278321788558761
+004070 CLNT S2 Leader@T1: receive command 1981640675078425036, index=4
+004071 PERS S2 Leader@T1: persisted states and snapshot
+004478 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+004481 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+004481 LOG1 S0 Follower@T1: RPC entries first={Index:4 Command:1981640675078425036 Term:1}, last={Index:4 Command:1981640675078425036 Term:1}
+004482 PERS S0 Follower@T1: persisted states and snapshot
+004483 LOG1 S2 Leader@T1: trying to commit, matchIndex=[3 4 4]
+004483 CMIT S2 Leader@T1: set commit index to 4
+004483 LOG2 S2 Leader@T1: applied log index=4, command=1981640675078425036
+004484 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+004485 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+004485 LOG1 S1 Follower@T1: RPC entries first={Index:4 Command:1981640675078425036 Term:1}, last={Index:4 Command:1981640675078425036 Term:1}
+004486 PERS S1 Follower@T1: persisted states and snapshot
+004487 LOG1 S2 Leader@T1: trying to commit, matchIndex=[4 4 4]
+004487 LOG2 S1 Follower@T1: applied log index=4, command=1981640675078425036
+004986 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+004989 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+004990 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+004991 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+004993 LOG2 S0 Follower@T1: applied log index=4, command=1981640675078425036
+005115 CLNT S2 Leader@T1: receive command 7304007284488598546, index=5
+005115 PERS S2 Leader@T1: persisted states and snapshot
+005507 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+005510 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+005510 LOG1 S0 Follower@T1: RPC entries first={Index:5 Command:7304007284488598546 Term:1}, last={Index:5 Command:7304007284488598546 Term:1}
+005511 PERS S0 Follower@T1: persisted states and snapshot
+005512 LOG1 S2 Leader@T1: trying to commit, matchIndex=[4 5 5]
+005513 CMIT S2 Leader@T1: set commit index to 5
+005513 LOG2 S2 Leader@T1: applied log index=5, command=7304007284488598546
+005513 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+005515 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+005515 LOG1 S1 Follower@T1: RPC entries first={Index:5 Command:7304007284488598546 Term:1}, last={Index:5 Command:7304007284488598546 Term:1}
+005516 PERS S1 Follower@T1: persisted states and snapshot
+005517 LOG1 S2 Leader@T1: trying to commit, matchIndex=[5 5 5]
+005517 LOG2 S1 Follower@T1: applied log index=5, command=7304007284488598546
+006050 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+006053 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+006054 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+006056 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+006057 LOG2 S0 Follower@T1: applied log index=5, command=7304007284488598546
+006193 CLNT S2 Leader@T1: receive command 4255951092819580042, index=6
+006193 PERS S2 Leader@T1: persisted states and snapshot
+006557 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+006559 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+006560 LOG1 S0 Follower@T1: RPC entries first={Index:6 Command:4255951092819580042 Term:1}, last={Index:6 Command:4255951092819580042 Term:1}
+006560 PERS S0 Follower@T1: persisted states and snapshot
+006562 LOG1 S2 Leader@T1: trying to commit, matchIndex=[5 6 6]
+006562 CMIT S2 Leader@T1: set commit index to 6
+006562 LOG2 S2 Leader@T1: applied log index=6, command=4255951092819580042
+006563 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+006565 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+006565 LOG1 S1 Follower@T1: RPC entries first={Index:6 Command:4255951092819580042 Term:1}, last={Index:6 Command:4255951092819580042 Term:1}
+006565 PERS S1 Follower@T1: persisted states and snapshot
+006566 LOG1 S2 Leader@T1: trying to commit, matchIndex=[6 6 6]
+006566 LOG2 S1 Follower@T1: applied log index=6, command=4255951092819580042
+007065 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+007068 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+007069 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+007070 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+007071 LOG2 S0 Follower@T1: applied log index=6, command=4255951092819580042
+007222 CLNT S2 Leader@T1: receive command 4765615563437344485, index=7
+007222 PERS S2 Leader@T1: persisted states and snapshot
+007576 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+007578 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+007579 LOG1 S0 Follower@T1: RPC entries first={Index:7 Command:4765615563437344485 Term:1}, last={Index:7 Command:4765615563437344485 Term:1}
+007579 PERS S0 Follower@T1: persisted states and snapshot
+007580 LOG1 S2 Leader@T1: trying to commit, matchIndex=[6 7 7]
+007580 CMIT S2 Leader@T1: set commit index to 7
+007580 LOG2 S2 Leader@T1: applied log index=7, command=4765615563437344485
+007581 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+007582 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+007582 LOG1 S1 Follower@T1: RPC entries first={Index:7 Command:4765615563437344485 Term:1}, last={Index:7 Command:4765615563437344485 Term:1}
+007582 PERS S1 Follower@T1: persisted states and snapshot
+007583 LOG1 S2 Leader@T1: trying to commit, matchIndex=[7 7 7]
+007583 LOG2 S1 Follower@T1: applied log index=7, command=4765615563437344485
+008101 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+008104 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+008106 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+008108 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+008109 LOG2 S0 Follower@T1: applied log index=7, command=4765615563437344485
+008233 CLNT S2 Leader@T1: receive command 1866383289189219090, index=8
+008233 PERS S2 Leader@T1: persisted states and snapshot
+008610 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+008613 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+008613 LOG1 S0 Follower@T1: RPC entries first={Index:8 Command:1866383289189219090 Term:1}, last={Index:8 Command:1866383289189219090 Term:1}
+008614 PERS S0 Follower@T1: persisted states and snapshot
+008615 LOG1 S2 Leader@T1: trying to commit, matchIndex=[7 8 8]
+008615 CMIT S2 Leader@T1: set commit index to 8
+008615 LOG2 S2 Leader@T1: applied log index=8, command=1866383289189219090
+008616 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+008617 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+008618 LOG1 S1 Follower@T1: RPC entries first={Index:8 Command:1866383289189219090 Term:1}, last={Index:8 Command:1866383289189219090 Term:1}
+008618 PERS S1 Follower@T1: persisted states and snapshot
+008619 LOG1 S2 Leader@T1: trying to commit, matchIndex=[8 8 8]
+008619 LOG2 S1 Follower@T1: applied log index=8, command=1866383289189219090
+009118 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+009121 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+009123 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+009125 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+009126 LOG2 S0 Follower@T1: applied log index=8, command=1866383289189219090
+009249 CLNT S2 Leader@T1: receive command 8418431645535145430, index=9
+009249 PERS S2 Leader@T1: persisted states and snapshot
+009588 TIMR S2 Leader@T1: election timer fires
+009625 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+009628 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+009628 LOG1 S0 Follower@T1: RPC entries first={Index:9 Command:8418431645535145430 Term:1}, last={Index:9 Command:8418431645535145430 Term:1}
+009628 PERS S0 Follower@T1: persisted states and snapshot
+009630 LOG1 S2 Leader@T1: trying to commit, matchIndex=[8 9 9]
+009630 CMIT S2 Leader@T1: set commit index to 9
+009630 LOG2 S2 Leader@T1: applied log index=9, command=8418431645535145430
+009631 SNAP S2 Leader@T1: taking snapshot, index=9
+009631 PERS S2 Leader@T1: persisted states and snapshot
+009632 SNAP S2 Leader@T1: truncated log [{Index:9 Command:8418431645535145430 Term:1}]
+009632 SNAP S2 Leader@T1: sending snapshot{index=9, term=1} to peer 1
+009635 SNAP S1 Follower@T1: received InstallSnapshot RPC, snapshot{index=9, term=1}
+009635 SNAP S1 Follower@T1: set snapshot, index=9, logs [{Index:9 Command:<nil> Term:1}]
+009635 PERS S1 Follower@T1: persisted states and snapshot
+009636 LOG1 S2 Leader@T1: trying to commit, matchIndex=[9 9 9]
+009637 LOG2 S1 Follower@T1: applied snapshot{index=9, term=1}
+010132 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+010133 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+010135 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+010136 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+010138 LOG2 S0 Follower@T1: applied log index=9, command=8418431645535145430
+010139 SNAP S0 Follower@T1: taking snapshot, index=9
+010139 PERS S0 Follower@T1: persisted states and snapshot
+010140 SNAP S0 Follower@T1: truncated log [{Index:9 Command:8418431645535145430 Term:1}]
+010293 CLNT S2 Leader@T1: receive command 7416888692616200043, index=10
+010293 PERS S2 Leader@T1: persisted states and snapshot
+010633 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+010635 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+010636 LOG1 S0 Follower@T1: RPC entries first={Index:10 Command:7416888692616200043 Term:1}, last={Index:10 Command:7416888692616200043 Term:1}
+010636 PERS S0 Follower@T1: persisted states and snapshot
+010637 LOG1 S2 Leader@T1: trying to commit, matchIndex=[9 10 10]
+010637 CMIT S2 Leader@T1: set commit index to 10
+010637 LOG2 S2 Leader@T1: applied log index=10, command=7416888692616200043
+010638 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+010640 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+010640 LOG1 S1 Follower@T1: RPC entries first={Index:10 Command:7416888692616200043 Term:1}, last={Index:10 Command:7416888692616200043 Term:1}
+010640 PERS S1 Follower@T1: persisted states and snapshot
+010641 LOG1 S2 Leader@T1: trying to commit, matchIndex=[10 10 10]
+010642 LOG2 S1 Follower@T1: applied log index=10, command=7416888692616200043
+011170 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+011173 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+011174 LOG2 S0 Follower@T1: applied log index=10, command=7416888692616200043
+011174 CLNT S2 Leader@T1: receive command 1944632753747898242, index=11
+011174 PERS S2 Leader@T1: persisted states and snapshot
+011175 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+011177 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+011177 LOG1 S1 Follower@T1: RPC entries first={Index:11 Command:1944632753747898242 Term:1}, last={Index:11 Command:1944632753747898242 Term:1}
+011177 PERS S1 Follower@T1: persisted states and snapshot
+011179 LOG1 S2 Leader@T1: trying to commit, matchIndex=[10 11 11]
+011179 CMIT S2 Leader@T1: set commit index to 11
+011179 LOG2 S2 Leader@T1: applied log index=11, command=1944632753747898242
+011680 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+011682 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+011683 LOG1 S0 Follower@T1: RPC entries first={Index:11 Command:1944632753747898242 Term:1}, last={Index:11 Command:1944632753747898242 Term:1}
+011683 PERS S0 Follower@T1: persisted states and snapshot
+011684 LOG1 S2 Leader@T1: trying to commit, matchIndex=[11 11 11]
+011684 LOG2 S0 Follower@T1: applied log index=11, command=1944632753747898242
+011685 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+011687 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+011687 LOG2 S1 Follower@T1: applied log index=11, command=1944632753747898242
+011810 CLNT S2 Leader@T1: receive command 4249700184867983250, index=12
+011810 PERS S2 Leader@T1: persisted states and snapshot
+012181 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+012184 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+012184 LOG1 S0 Follower@T1: RPC entries first={Index:12 Command:4249700184867983250 Term:1}, last={Index:12 Command:4249700184867983250 Term:1}
+012184 PERS S0 Follower@T1: persisted states and snapshot
+012186 LOG1 S2 Leader@T1: trying to commit, matchIndex=[11 12 12]
+012187 CMIT S2 Leader@T1: set commit index to 12
+012187 LOG2 S2 Leader@T1: applied log index=12, command=4249700184867983250
+012188 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+012190 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+012190 LOG1 S1 Follower@T1: RPC entries first={Index:12 Command:4249700184867983250 Term:1}, last={Index:12 Command:4249700184867983250 Term:1}
+012190 PERS S1 Follower@T1: persisted states and snapshot
+012191 LOG1 S2 Leader@T1: trying to commit, matchIndex=[12 12 12]
+012192 LOG2 S1 Follower@T1: applied log index=12, command=4249700184867983250
+012690 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+012692 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+012693 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+012695 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+012696 LOG2 S0 Follower@T1: applied log index=12, command=4249700184867983250
+012831 CLNT S2 Leader@T1: receive command 6976661292053552123, index=13
+012831 PERS S2 Leader@T1: persisted states and snapshot
+013207 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+013210 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+013210 LOG1 S1 Follower@T1: RPC entries first={Index:13 Command:6976661292053552123 Term:1}, last={Index:13 Command:6976661292053552123 Term:1}
+013211 PERS S1 Follower@T1: persisted states and snapshot
+013212 LOG1 S2 Leader@T1: trying to commit, matchIndex=[12 13 13]
+013213 CMIT S2 Leader@T1: set commit index to 13
+013213 LOG2 S2 Leader@T1: applied log index=13, command=6976661292053552123
+013213 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+013216 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+013216 LOG1 S0 Follower@T1: RPC entries first={Index:13 Command:6976661292053552123 Term:1}, last={Index:13 Command:6976661292053552123 Term:1}
+013216 PERS S0 Follower@T1: persisted states and snapshot
+013218 LOG1 S2 Leader@T1: trying to commit, matchIndex=[13 13 13]
+013218 LOG2 S0 Follower@T1: applied log index=13, command=6976661292053552123
+013708 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+013711 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+013712 LOG2 S1 Follower@T1: applied log index=13, command=6976661292053552123
+013719 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+013722 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+013874 CLNT S2 Leader@T1: receive command 687678695916006763, index=14
+013874 PERS S2 Leader@T1: persisted states and snapshot
+014224 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+014227 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+014227 LOG1 S0 Follower@T1: RPC entries first={Index:14 Command:687678695916006763 Term:1}, last={Index:14 Command:687678695916006763 Term:1}
+014227 PERS S0 Follower@T1: persisted states and snapshot
+014229 LOG1 S2 Leader@T1: trying to commit, matchIndex=[13 14 14]
+014229 CMIT S2 Leader@T1: set commit index to 14
+014229 LOG2 S2 Leader@T1: applied log index=14, command=687678695916006763
+014238 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+014240 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+014241 LOG1 S1 Follower@T1: RPC entries first={Index:14 Command:687678695916006763 Term:1}, last={Index:14 Command:687678695916006763 Term:1}
+014241 PERS S1 Follower@T1: persisted states and snapshot
+014242 LOG2 S1 Follower@T1: applied log index=14, command=687678695916006763
+014243 LOG1 S2 Leader@T1: trying to commit, matchIndex=[14 14 14]
+014728 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+014730 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+014731 LOG2 S0 Follower@T1: applied log index=14, command=687678695916006763
+014742 TIMR S2 Leader@T1: election timer fires
+014743 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+014745 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+014947 CLNT S2 Leader@T1: receive command 746378041768083591, index=15
+014948 PERS S2 Leader@T1: persisted states and snapshot
+015243 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+015245 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+015246 LOG1 S0 Follower@T1: RPC entries first={Index:15 Command:746378041768083591 Term:1}, last={Index:15 Command:746378041768083591 Term:1}
+015246 PERS S0 Follower@T1: persisted states and snapshot
+015247 LOG1 S2 Leader@T1: trying to commit, matchIndex=[14 15 15]
+015247 CMIT S2 Leader@T1: set commit index to 15
+015247 LOG2 S2 Leader@T1: applied log index=15, command=746378041768083591
+015283 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+015285 LOG1 S1 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+015285 LOG1 S1 Follower@T1: RPC entries first={Index:15 Command:746378041768083591 Term:1}, last={Index:15 Command:746378041768083591 Term:1}
+015286 PERS S1 Follower@T1: persisted states and snapshot
+015287 LOG1 S2 Leader@T1: trying to commit, matchIndex=[15 15 15]
+015287 LOG2 S1 Follower@T1: applied log index=15, command=746378041768083591
+015745 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+015747 LOG1 S0 Follower@T1: received AppendEntries RPC from S2 Leader@T1
+015749 LOG2 S0 Follower@T1: applied log index=15, command=746378041768083591
+015773 PERS S0 Follower@T0: restored persistent states and snapshot
+015775 PERS S1 Follower@T0: restored persistent states and snapshot
+015777 PERS S2 Follower@T0: restored persistent states and snapshot
+015778 LOG1 S0 start running
+015779 LOG1 S1 start running
+015779 LOG1 S2 start running
+015790 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 1
+016031 TIMR S1 Follower@T1: election timer fires
+016032 LOG1 S1 Follower@T1: convert to Candidate
+016032 VOTE S1 Candidate@T2: start election for term 2
+016034 LOG1 S2 Follower@T1: received RequestVote RPC {Term:2 CandidateId:1 LastLogIndex:15 LastLogTerm:1}
+016034 PERS S2 Follower@T2: persisted states and snapshot
+016035 PERS S2 Follower@T2: persisted states and snapshot
+016035 VOTE S2 Follower@T2: grant vote for candidate 1
+016036 VOTE S1 Candidate@T2: convert to Leader
+016037 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+016038 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+016039 LOG1 S1 Leader@T2: trying to commit, matchIndex=[0 15 15]
+016041 LOG1 S0 Follower@T1: received RequestVote RPC {Term:2 CandidateId:1 LastLogIndex:15 LastLogTerm:1}
+016042 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+016041 PERS S0 Follower@T2: persisted states and snapshot
+016045 PERS S0 Follower@T2: persisted states and snapshot
+016046 VOTE S0 Follower@T2: grant vote for candidate 1
+016047 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+016048 LOG1 S1 Leader@T2: trying to commit, matchIndex=[15 15 15]
+016048 CMIT S1 Leader@T2: set commit index to 15
+016048 LOG2 S1 Leader@T2: applied log index=10, command=7416888692616200043
+016048 LOG2 S1 Leader@T2: applied log index=11, command=1944632753747898242
+016049 LOG2 S1 Leader@T2: applied log index=12, command=4249700184867983250
+016049 LOG2 S1 Leader@T2: applied log index=13, command=6976661292053552123
+016049 LOG2 S1 Leader@T2: applied log index=14, command=687678695916006763
+016049 LOG2 S1 Leader@T2: applied log index=15, command=746378041768083591
+016249 LEAD S2 Leader@T1: sending AppendEntries RPC to peer 0
+016281 CLNT S1 Leader@T2: receive command 7045074776994511751, index=16
+016282 PERS S1 Leader@T2: persisted states and snapshot
+016547 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+016549 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+016549 LOG1 S0 Follower@T2: RPC entries first={Index:16 Command:7045074776994511751 Term:2}, last={Index:16 Command:7045074776994511751 Term:2}
+016550 PERS S0 Follower@T2: persisted states and snapshot
+016551 LOG1 S1 Leader@T2: trying to commit, matchIndex=[15 16 16]
+016552 CMIT S1 Leader@T2: set commit index to 16
+016552 LOG2 S1 Leader@T2: applied log index=16, command=7045074776994511751
+016552 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+016554 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+016554 LOG1 S2 Follower@T2: RPC entries first={Index:16 Command:7045074776994511751 Term:2}, last={Index:16 Command:7045074776994511751 Term:2}
+016554 PERS S2 Follower@T2: persisted states and snapshot
+016555 LOG1 S1 Leader@T2: trying to commit, matchIndex=[16 16 16]
+016555 LOG2 S0 Follower@T2: applied log index=10, command=7416888692616200043
+016556 LOG2 S0 Follower@T2: applied log index=11, command=1944632753747898242
+016556 LOG2 S0 Follower@T2: applied log index=12, command=4249700184867983250
+016556 LOG2 S0 Follower@T2: applied log index=13, command=6976661292053552123
+016556 LOG2 S0 Follower@T2: applied log index=14, command=687678695916006763
+016556 LOG2 S0 Follower@T2: applied log index=15, command=746378041768083591
+016556 LOG2 S2 Follower@T2: applied log index=10, command=7416888692616200043
+016556 LOG2 S2 Follower@T2: applied log index=11, command=1944632753747898242
+016557 LOG2 S2 Follower@T2: applied log index=12, command=4249700184867983250
+016557 LOG2 S2 Follower@T2: applied log index=13, command=6976661292053552123
+016557 LOG2 S2 Follower@T2: applied log index=14, command=687678695916006763
+016557 LOG2 S2 Follower@T2: applied log index=15, command=746378041768083591
+016557 LOG2 S2 Follower@T2: applied log index=16, command=7045074776994511751
+017050 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+017052 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+017053 LOG2 S0 Follower@T2: applied log index=16, command=7045074776994511751
+017054 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+017055 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+017098 CLNT S1 Leader@T2: receive command 650490217671041028, index=17
+017098 PERS S1 Leader@T2: persisted states and snapshot
+017554 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+017557 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+017557 LOG1 S2 Follower@T2: RPC entries first={Index:17 Command:650490217671041028 Term:2}, last={Index:17 Command:650490217671041028 Term:2}
+017558 PERS S2 Follower@T2: persisted states and snapshot
+017559 LOG1 S1 Leader@T2: trying to commit, matchIndex=[16 17 17]
+017559 CMIT S1 Leader@T2: set commit index to 17
+017559 LOG2 S1 Leader@T2: applied log index=17, command=650490217671041028
+017560 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+017562 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+017562 LOG1 S0 Follower@T2: RPC entries first={Index:17 Command:650490217671041028 Term:2}, last={Index:17 Command:650490217671041028 Term:2}
+017562 PERS S0 Follower@T2: persisted states and snapshot
+017563 LOG1 S1 Leader@T2: trying to commit, matchIndex=[17 17 17]
+017563 LOG2 S0 Follower@T2: applied log index=17, command=650490217671041028
+018068 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+018071 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+018072 LOG2 S2 Follower@T2: applied log index=17, command=650490217671041028
+018073 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+018075 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+018109 CLNT S1 Leader@T2: receive command 2904592619729588703, index=18
+018109 PERS S1 Leader@T2: persisted states and snapshot
+018582 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+018584 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+018584 LOG1 S0 Follower@T2: RPC entries first={Index:18 Command:2904592619729588703 Term:2}, last={Index:18 Command:2904592619729588703 Term:2}
+018584 PERS S0 Follower@T2: persisted states and snapshot
+018586 LOG1 S1 Leader@T2: trying to commit, matchIndex=[17 18 18]
+018586 CMIT S1 Leader@T2: set commit index to 18
+018586 LOG2 S1 Leader@T2: applied log index=18, command=2904592619729588703
+018587 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+018588 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+018588 LOG1 S2 Follower@T2: RPC entries first={Index:18 Command:2904592619729588703 Term:2}, last={Index:18 Command:2904592619729588703 Term:2}
+018589 PERS S2 Follower@T2: persisted states and snapshot
+018590 LOG1 S1 Leader@T2: trying to commit, matchIndex=[18 18 18]
+018590 LOG2 S2 Follower@T2: applied log index=18, command=2904592619729588703
+019088 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+019091 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+019092 LOG2 S0 Follower@T2: applied log index=18, command=2904592619729588703
+019093 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+019094 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+019140 CLNT S1 Leader@T2: receive command 2800705168163148976, index=19
+019140 PERS S1 Leader@T2: persisted states and snapshot
+019606 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+019609 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+019610 LOG1 S2 Follower@T2: RPC entries first={Index:19 Command:2800705168163148976 Term:2}, last={Index:19 Command:2800705168163148976 Term:2}
+019610 PERS S2 Follower@T2: persisted states and snapshot
+019611 LOG1 S1 Leader@T2: trying to commit, matchIndex=[18 19 19]
+019611 CMIT S1 Leader@T2: set commit index to 19
+019612 LOG2 S1 Leader@T2: applied log index=19, command=2800705168163148976
+019613 SNAP S1 Leader@T2: taking snapshot, index=19
+019613 PERS S1 Leader@T2: persisted states and snapshot
+019613 SNAP S1 Leader@T2: truncated log [{Index:19 Command:2800705168163148976 Term:2}]
+019614 SNAP S1 Leader@T2: sending snapshot{index=19, term=2} to peer 0
+019616 SNAP S0 Follower@T2: received InstallSnapshot RPC, snapshot{index=19, term=2}
+019616 SNAP S0 Follower@T2: set snapshot, index=19, logs [{Index:19 Command:<nil> Term:2}]
+019616 PERS S0 Follower@T2: persisted states and snapshot
+019618 LOG1 S1 Leader@T2: trying to commit, matchIndex=[19 19 19]
+019618 LOG2 S0 Follower@T2: applied snapshot{index=19, term=2}
+020132 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+020135 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+020136 LOG2 S2 Follower@T2: applied log index=19, command=2800705168163148976
+020137 SNAP S2 Follower@T2: taking snapshot, index=19
+020137 PERS S2 Follower@T2: persisted states and snapshot
+020138 SNAP S2 Follower@T2: truncated log [{Index:19 Command:2800705168163148976 Term:2}]
+020138 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+020141 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+020208 CLNT S1 Leader@T2: receive command 1754249689937574226, index=20
+020208 PERS S1 Leader@T2: persisted states and snapshot
+020650 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+020653 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+020653 LOG1 S0 Follower@T2: RPC entries first={Index:20 Command:1754249689937574226 Term:2}, last={Index:20 Command:1754249689937574226 Term:2}
+020653 PERS S0 Follower@T2: persisted states and snapshot
+020655 LOG1 S1 Leader@T2: trying to commit, matchIndex=[19 20 20]
+020655 CMIT S1 Leader@T2: set commit index to 20
+020655 LOG2 S1 Leader@T2: applied log index=20, command=1754249689937574226
+020656 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+020658 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+020658 LOG1 S2 Follower@T2: RPC entries first={Index:20 Command:1754249689937574226 Term:2}, last={Index:20 Command:1754249689937574226 Term:2}
+020659 PERS S2 Follower@T2: persisted states and snapshot
+020660 LOG1 S1 Leader@T2: trying to commit, matchIndex=[20 20 20]
+020660 LOG2 S2 Follower@T2: applied log index=20, command=1754249689937574226
+021154 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+021157 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+021158 LOG2 S0 Follower@T2: applied log index=20, command=1754249689937574226
+021159 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+021161 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+021347 CLNT S1 Leader@T2: receive command 4403395721330133310, index=21
+021348 PERS S1 Leader@T2: persisted states and snapshot
+021642 TIMR S0 Follower@T1: election timer fires
+021642 LOG1 S0 Follower@T1: convert to Candidate
+021642 VOTE S0 Candidate@T2: start election for term 2
+021654 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+021657 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+021657 LOG1 S0 Follower@T2: RPC entries first={Index:21 Command:4403395721330133310 Term:2}, last={Index:21 Command:4403395721330133310 Term:2}
+021657 PERS S0 Follower@T2: persisted states and snapshot
+021659 LOG1 S1 Leader@T2: trying to commit, matchIndex=[20 21 21]
+021659 CMIT S1 Leader@T2: set commit index to 21
+021659 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+021661 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+021661 LOG1 S2 Follower@T2: RPC entries first={Index:21 Command:4403395721330133310 Term:2}, last={Index:21 Command:4403395721330133310 Term:2}
+021661 PERS S2 Follower@T2: persisted states and snapshot
+021662 LOG1 S1 Leader@T2: trying to commit, matchIndex=[21 21 21]
+021663 LOG2 S1 Leader@T2: applied log index=21, command=4403395721330133310
+021663 LOG2 S2 Follower@T2: applied log index=21, command=4403395721330133310
+022172 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+022174 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+022176 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+022177 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+022179 LOG2 S0 Follower@T2: applied log index=21, command=4403395721330133310
+022398 CLNT S1 Leader@T2: receive command 8917541070841611898, index=22
+022398 PERS S1 Leader@T2: persisted states and snapshot
+022678 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+022681 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+022681 LOG1 S0 Follower@T2: RPC entries first={Index:22 Command:8917541070841611898 Term:2}, last={Index:22 Command:8917541070841611898 Term:2}
+022682 PERS S0 Follower@T2: persisted states and snapshot
+022683 LOG1 S1 Leader@T2: trying to commit, matchIndex=[21 22 22]
+022683 CMIT S1 Leader@T2: set commit index to 22
+022683 LOG2 S1 Leader@T2: applied log index=22, command=8917541070841611898
+022684 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+022685 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+022685 LOG1 S2 Follower@T2: RPC entries first={Index:22 Command:8917541070841611898 Term:2}, last={Index:22 Command:8917541070841611898 Term:2}
+022685 PERS S2 Follower@T2: persisted states and snapshot
+022686 LOG1 S1 Leader@T2: trying to commit, matchIndex=[22 22 22]
+022687 LOG2 S2 Follower@T2: applied log index=22, command=8917541070841611898
+023185 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+023188 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+023189 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+023191 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+023192 LOG2 S0 Follower@T2: applied log index=22, command=8917541070841611898
+023216 CLNT S1 Leader@T2: receive command 4848473824896687189, index=23
+023216 PERS S1 Leader@T2: persisted states and snapshot
+023695 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+023698 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+023698 LOG1 S0 Follower@T2: RPC entries first={Index:23 Command:4848473824896687189 Term:2}, last={Index:23 Command:4848473824896687189 Term:2}
+023698 PERS S0 Follower@T2: persisted states and snapshot
+023700 LOG1 S1 Leader@T2: trying to commit, matchIndex=[22 23 23]
+023700 CMIT S1 Leader@T2: set commit index to 23
+023700 LOG2 S1 Leader@T2: applied log index=23, command=4848473824896687189
+023701 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+023702 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+023702 LOG1 S2 Follower@T2: RPC entries first={Index:23 Command:4848473824896687189 Term:2}, last={Index:23 Command:4848473824896687189 Term:2}
+023703 PERS S2 Follower@T2: persisted states and snapshot
+023704 LOG1 S1 Leader@T2: trying to commit, matchIndex=[23 23 23]
+023704 LOG2 S2 Follower@T2: applied log index=23, command=4848473824896687189
+024196 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+024199 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+024200 LOG2 S0 Follower@T2: applied log index=23, command=4848473824896687189
+024201 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+024203 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+024236 CLNT S1 Leader@T2: receive command 2857398355801156549, index=24
+024236 PERS S1 Leader@T2: persisted states and snapshot
+024473 TIMR S1 Leader@T2: election timer fires
+024545 TIMR S2 Leader@T1: election timer fires
+024700 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+024701 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+024704 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+024704 LOG1 S2 Follower@T2: RPC entries first={Index:24 Command:2857398355801156549 Term:2}, last={Index:24 Command:2857398355801156549 Term:2}
+024704 PERS S2 Follower@T2: persisted states and snapshot
+024706 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+024707 LOG1 S0 Follower@T2: RPC entries first={Index:24 Command:2857398355801156549 Term:2}, last={Index:24 Command:2857398355801156549 Term:2}
+024707 PERS S0 Follower@T2: persisted states and snapshot
+024708 LOG1 S1 Leader@T2: trying to commit, matchIndex=[23 24 24]
+024709 CMIT S1 Leader@T2: set commit index to 24
+024709 LOG2 S1 Leader@T2: applied log index=24, command=2857398355801156549
+024710 LOG1 S1 Leader@T2: trying to commit, matchIndex=[24 24 24]
+024855 TIMR S1 Follower@T1: election timer fires
+024855 LOG1 S1 Follower@T1: convert to Candidate
+024855 VOTE S1 Candidate@T2: start election for term 2
+025210 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+025212 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+025214 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+025215 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+025216 LOG2 S2 Follower@T2: applied log index=24, command=2857398355801156549
+025217 LOG2 S0 Follower@T2: applied log index=24, command=2857398355801156549
+025289 CLNT S1 Leader@T2: receive command 8208433147792462323, index=25
+025289 PERS S1 Leader@T2: persisted states and snapshot
+025722 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+025725 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+025725 LOG1 S0 Follower@T2: RPC entries first={Index:25 Command:8208433147792462323 Term:2}, last={Index:25 Command:8208433147792462323 Term:2}
+025725 PERS S0 Follower@T2: persisted states and snapshot
+025727 LOG1 S1 Leader@T2: trying to commit, matchIndex=[24 25 25]
+025727 CMIT S1 Leader@T2: set commit index to 25
+025727 LOG2 S1 Leader@T2: applied log index=25, command=8208433147792462323
+025727 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+025729 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+025729 LOG1 S2 Follower@T2: RPC entries first={Index:25 Command:8208433147792462323 Term:2}, last={Index:25 Command:8208433147792462323 Term:2}
+025729 PERS S2 Follower@T2: persisted states and snapshot
+025731 LOG1 S1 Leader@T2: trying to commit, matchIndex=[25 25 25]
+025731 LOG2 S2 Follower@T2: applied log index=25, command=8208433147792462323
+026226 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+026228 LOG1 S0 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+026230 LOG2 S0 Follower@T2: applied log index=25, command=8208433147792462323
+026230 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+026232 LOG1 S2 Follower@T2: received AppendEntries RPC from S1 Leader@T2
+026354 PERS S0 Follower@T0: restored persistent states and snapshot
+026357 PERS S1 Follower@T0: restored persistent states and snapshot
+026359 PERS S2 Follower@T0: restored persistent states and snapshot
+026361 LOG1 S0 start running
+026361 LOG1 S1 start running
+026361 LOG1 S2 start running
+026733 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 0
+026734 LEAD S1 Leader@T2: sending AppendEntries RPC to peer 2
+027283 ERRO S1 Leader@T2: error sending AppendEntries RPC to peer 0
+029949 ERRO S0 Candidate@T2: error sending RequestVote RPC to peer 2
+030161 TIMR S0 Follower@T2: election timer fires
+030161 LOG1 S0 Follower@T2: convert to Candidate
+030162 VOTE S0 Candidate@T3: start election for term 3
+030164 LOG1 S2 Follower@T2: received RequestVote RPC {Term:3 CandidateId:0 LastLogIndex:25 LastLogTerm:2}
+030165 PERS S2 Follower@T3: persisted states and snapshot
+030165 PERS S2 Follower@T3: persisted states and snapshot
+030165 VOTE S2 Follower@T3: grant vote for candidate 0
+030167 VOTE S0 Candidate@T3: convert to Leader
+030167 LEAD S0 Leader@T3: sending AppendEntries RPC to peer 2
+030169 LOG1 S2 Follower@T3: received AppendEntries RPC from S0 Leader@T3
+030170 LOG1 S0 Leader@T3: trying to commit, matchIndex=[0 25 25]
+030172 LOG1 S1 Follower@T2: received RequestVote RPC {Term:3 CandidateId:0 LastLogIndex:25 LastLogTerm:2}
+030172 PERS S1 Follower@T3: persisted states and snapshot
+030172 PERS S1 Follower@T3: persisted states and snapshot
+030173 VOTE S1 Follower@T3: grant vote for candidate 0
+030174 LEAD S0 Leader@T3: sending AppendEntries RPC to peer 1
+030176 LOG1 S1 Follower@T3: received AppendEntries RPC from S0 Leader@T3
+030178 LOG1 S0 Leader@T3: trying to commit, matchIndex=[25 25 25]
+030178 CMIT S0 Leader@T3: set commit index to 25
+030178 LOG2 S0 Leader@T3: applied log index=20, command=1754249689937574226
+030178 LOG2 S0 Leader@T3: applied log index=21, command=4403395721330133310
+030178 LOG2 S0 Leader@T3: applied log index=22, command=8917541070841611898
+030179 LOG2 S0 Leader@T3: applied log index=23, command=4848473824896687189
+030179 LOG2 S0 Leader@T3: applied log index=24, command=2857398355801156549
+030179 LOG2 S0 Leader@T3: applied log index=25, command=8208433147792462323
+030442 CLNT S0 Leader@T3: receive command 2661611364837885184, index=26
+030442 PERS S0 Leader@T3: persisted states and snapshot
+030677 LEAD S0 Leader@T3: sending AppendEntries RPC to peer 1
+030680 LOG1 S1 Follower@T3: received AppendEntries RPC from S0 Leader@T3
+030680 LOG1 S1 Follower@T3: RPC entries first={Index:26 Command:2661611364837885184 Term:3}, last={Index:26 Command:2661611364837885184 Term:3}
+030680 PERS S1 Follower@T3: persisted states and snapshot
+030682 LOG1 S0 Leader@T3: trying to commit, matchIndex=[25 26 26]
+030682 CMIT S0 Leader@T3: set commit index to 26
+030682 LOG2 S0 Leader@T3: applied log index=26, command=2661611364837885184
+030683 LEAD S0 Leader@T3: sending AppendEntries RPC to peer 2
+030685 LOG1 S2 Follower@T3: received AppendEntries RPC from S0 Leader@T3
+030686 LOG1 S2 Follower@T3: RPC entries first={Index:26 Command:2661611364837885184 Term:3}, last={Index:26 Command:2661611364837885184 Term:3}
+030686 PERS S2 Follower@T3: persisted states and snapshot
+030687 LOG2 S2 Follower@T3: applied log index=20, command=1754249689937574226
+030687 LOG2 S1 Follower@T3: applied log index=20, command=1754249689937574226
+031252 LEAD S0 Leader@T3: sending AppendEntries RPC to peer 1
+031255 LOG1 S1 Follower@T3: received AppendEntries RPC from S0 Leader@T3
+031257 LOG1 S0 Leader@T3: trying to commit, matchIndex=[26 26 26]
+031269 LOG2 S2 Follower@T3: applied log index=21, command=4403395721330133310
+031269 LOG2 S2 Follower@T3: applied log index=22, command=8917541070841611898
+031270 LOG2 S2 Follower@T3: applied log index=23, command=4848473824896687189
+031270 LOG2 S2 Follower@T3: applied log index=24, command=2857398355801156549
+031270 LOG2 S2 Follower@T3: applied log index=25, command=8208433147792462323
+031270 LOG2 S2 Follower@T3: applied log index=26, command=2661611364837885184
+apply error: server 1 apply out of order, expected index 22, got 21
+exit status 1
+FAIL	6.5840/raft	3.317s

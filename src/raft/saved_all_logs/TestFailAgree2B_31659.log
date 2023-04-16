@@ -1,0 +1,201 @@
+000429 PERS S0 Follower@T0: restored persistent states and snapshot
+000430 LOG1 S0 start running
+000433 PERS S1 Follower@T0: restored persistent states and snapshot
+000434 PERS S2 Follower@T0: restored persistent states and snapshot
+Test (2B): agreement after follower reconnects ...
+000434 LOG1 S1 start running
+000435 LOG1 S2 start running
+001255 TIMR S0 Follower@T0: election timer fires
+001256 LOG1 S0 Follower@T0: convert to Candidate
+001256 VOTE S0 Candidate@T1: start election for term 1
+001261 LOG1 S2 Follower@T0: received RequestVote RPC {Term:1 CandidateId:0 LastLogIndex:0 LastLogTerm:0}
+001261 PERS S2 Follower@T1: persisted states and snapshot
+001262 PERS S2 Follower@T1: persisted states and snapshot
+001262 VOTE S2 Follower@T1: grant vote for candidate 0
+001264 VOTE S0 Candidate@T1: convert to Leader
+001264 LEAD S0 Leader@T1: sending AppendEntries RPC to peer 2
+001267 LOG1 S2 Follower@T1: received AppendEntries RPC from S0 Leader@T1
+001268 TIMR S2 Follower@T1: election timer fires
+001268 LOG1 S2 Follower@T1: convert to Candidate
+001268 VOTE S2 Candidate@T2: start election for term 2
+001270 LOG1 S1 Follower@T0: received RequestVote RPC {Term:2 CandidateId:2 LastLogIndex:0 LastLogTerm:0}
+001270 PERS S1 Follower@T2: persisted states and snapshot
+001270 PERS S1 Follower@T2: persisted states and snapshot
+001270 VOTE S1 Follower@T2: grant vote for candidate 2
+001272 CLNT S0 Leader@T1: receive command 101, index=1
+001272 PERS S0 Leader@T1: persisted states and snapshot
+001274 LOG1 S1 Follower@T2: received RequestVote RPC {Term:1 CandidateId:0 LastLogIndex:0 LastLogTerm:0}
+001274 VOTE S1 Follower@T2: reject vote for candidate 0. Reason: my term higher.
+001275 LOG1 S0 Leader@T2: convert to Follower
+001275 PERS S0 Follower@T2: persisted states and snapshot
+001276 LOG1 S0 Follower@T2: received RequestVote RPC {Term:2 CandidateId:2 LastLogIndex:0 LastLogTerm:0}
+001276 VOTE S0 Follower@T2: reject vote for candidate 2. Reason: already voted or candidate log not up-to-date.
+001277 VOTE S0 Follower@T2: candidate last log entry={idx=0,term=0}, my last log entry={idx=1,term=1}
+001479 VOTE S2 Candidate@T2: convert to Leader
+001481 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+001485 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+001481 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+001488 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+001990 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+001992 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+001994 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+001995 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+002493 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+002497 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+002502 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+002506 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+002995 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+002997 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+003004 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+003007 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+003521 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+003524 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+003526 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+003528 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+004031 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+004033 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+004053 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+004056 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+004532 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+004535 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+004559 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+004562 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+005034 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+005037 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+005060 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+005063 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+005567 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+005570 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+005571 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+005573 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+006073 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+006076 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+006077 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+006079 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+006580 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+006583 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+006585 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+006587 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+007083 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+007086 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+007087 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+007089 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+007584 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+007587 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+007588 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+007589 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+008112 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+008116 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+008118 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+008121 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+008647 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+008650 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+008652 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+008653 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+008848 TIMR S2 Leader@T2: election timer fires
+009154 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+009157 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+009159 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+009161 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+009663 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+009666 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+009667 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+009669 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+010170 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+010173 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+010174 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+010176 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+010672 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+010674 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+010676 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+010678 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+011175 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+011177 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+011179 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+011181 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+011677 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+011680 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+011681 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+011683 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+012186 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+012189 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+012191 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+012193 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+012694 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+012697 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+012698 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+012699 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+013200 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+013203 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+013204 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+013205 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+013704 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+013707 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+013709 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+013710 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+014207 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+014210 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+014211 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+014213 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+014711 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+014714 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+014715 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+014717 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+015214 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+015217 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+015219 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+015221 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+015758 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+015761 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+015763 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+015765 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+016261 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+016264 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+016265 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+016267 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+016770 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+016773 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+016774 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+016777 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+017274 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+017277 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+017279 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+017281 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+017777 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+017780 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+017780 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+017782 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+018202 TIMR S2 Leader@T2: election timer fires
+018282 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+018285 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+018288 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+018290 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+018786 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+018790 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+018793 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+018796 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+019309 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+019312 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+019314 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+019315 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+019842 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+019845 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+019847 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+019849 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+020344 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+020347 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+020348 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+020350 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+020848 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+020849 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+020852 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+020853 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+021374 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 1
+021377 LOG1 S1 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+021378 LEAD S2 Leader@T2: sending AppendEntries RPC to peer 0
+021380 LOG1 S0 Follower@T2: received AppendEntries RPC from S2 Leader@T2
+--- FAIL: TestFailAgree2B (2.14s)
+    config.go:594: one(101) failed to reach agreement
+FAIL
+exit status 1
+FAIL	6.5840/raft	2.236s
