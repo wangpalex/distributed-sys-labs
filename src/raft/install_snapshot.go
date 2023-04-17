@@ -71,8 +71,8 @@ func (rf *Raft) sendSnapshot(peer int) {
 	Debug(dSnap, "%v: sending snapshot{index=%v, term=%v} to peer %v", idAndRole, rf.snapshotIndex, rf.snapshotTerm, peer)
 
 	// Simplification: send snapshot always in one chunk
-	dataChunk := make([]byte, 0, len(rf.snapshot))
-	dataChunk = append(dataChunk, rf.snapshot...)
+	dataChunk := make([]byte, len(rf.snapshot))
+	copy(dataChunk, rf.snapshot)
 	args := InstallSnapshotArgs{
 		Term:          rf.currTerm,
 		LeaderId:      rf.me,
@@ -117,8 +117,8 @@ func (rf *Raft) discardLogsBefore(index int) {
 
 func (rf *Raft) applySnapshot() {
 	rf.mu.Lock()
-	data := make([]byte, 0, len(rf.snapshot))
-	data = append(data, rf.snapshot...)
+	data := make([]byte, len(rf.snapshot))
+	copy(data, rf.snapshot)
 	msg := ApplyMsg{
 		CommandValid:  false,
 		SnapshotValid: true,
