@@ -5,4 +5,5 @@
 - [ ] Lab 4: [Sharded K/V Service](http://nil.csail.mit.edu/6.824/2020/labs/lab-shard.html)
 
 ### Tests
+#### Raft
 ![raft_tests](images/raft_tests.png)
