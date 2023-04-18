@@ -183,7 +183,7 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	rf.snapshotIndex = index
 	rf.snapshotTerm = rf.logs[index-snpIdx].Term
 	rf.snapshot = snapshot
-	rf.logs = rf.logs[index-snpIdx:]
+	rf.logs = cloneLogs(rf.logs[index-snpIdx:])
 	rf.persist()
 	Debug(dSnap, "%v: truncated log %+v", rf.getIdAndRole(), rf.logs)
 }

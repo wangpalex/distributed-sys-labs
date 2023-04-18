@@ -157,7 +157,7 @@ func (rf *Raft) getEntriesToSend(peer int) (prevLogIndex, prevLogTerm int, entri
 	snpIdx := rf.snapshotIndex
 	prevLogIndex = nextIndex - 1
 	prevLogTerm = rf.logs[prevLogIndex-snpIdx].Term
-	entries = append(entries, rf.logs[nextIndex-snpIdx:]...)
+	entries = cloneLogs(rf.logs[nextIndex-snpIdx:])
 	return
 }
 
@@ -179,8 +179,7 @@ func (rf *Raft) applyLogs() {
 	}
 	snpIdx := rf.snapshotIndex
 	baseIdx := rf.lastApplied + 1
-	applyEntries := make([]LogEntry, 0, rf.commitIndex-rf.lastApplied)
-	applyEntries = append(applyEntries, rf.logs[rf.lastApplied+1-snpIdx:rf.commitIndex+1-snpIdx]...)
+	applyEntries := cloneLogs(rf.logs[rf.lastApplied+1-snpIdx : rf.commitIndex+1-snpIdx])
 	rf.mu.Unlock()
 
 	for i, entry := range applyEntries {
@@ -204,8 +203,7 @@ func (rf *Raft) commitLogs() {
 
 	n := len(rf.peers)
 	snpIdx := rf.snapshotIndex
-	matchIndex := make([]int, 0, n)
-	matchIndex = append(matchIndex, rf.matchIndex...)
+	matchIndex := append(make([]int, 0, n), rf.matchIndex...)
 	sort.Ints(matchIndex)
 	Debug(dLog, "%v: trying to commit, matchIndex=%+v", rf.getIdAndRole(), matchIndex)
 	// Median of match indices is guaranteed to be replicated on majority

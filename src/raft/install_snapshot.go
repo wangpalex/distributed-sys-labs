@@ -28,32 +28,31 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	Debug(dTimer, "%v: reset election timer after receiving InstallSnapshot from S%v Leader@T%v", rf.getIdAndRole(), args.LeaderId, args.Term)
 	rf.resetElectionTimer()
 
-	if rf.snapshotIndex < args.SnapshotIndex {
-		rf.snapshot = args.Data
-		rf.snapshotIndex = args.SnapshotIndex
-		rf.snapshotTerm = args.SnapshotTerm
-
-		if rf.logs[len(rf.logs)-1].Index < args.SnapshotIndex {
-			// No existing entry match snapshot index
-			// Discard logs and use snapshot as first log entry
-			rf.logs = rf.logs[len(rf.logs)-1:]
-		} else {
-			// Discard entries before snapshot index
-			rf.discardLogsBefore(args.SnapshotIndex)
-		}
-		// Rewrite logs[0] to match snapshot
-		rf.logs[0] = LogEntry{Index: args.SnapshotIndex, Term: args.SnapshotTerm}
-		Debug(dSnap, "%v: set snapshot, index=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.logs)
-		rf.commitIndex = max(rf.commitIndex, rf.snapshotIndex)
-		if rf.lastApplied < rf.snapshotIndex {
-			go rf.applySnapshot()
-		}
-		rf.persist()
-	} else {
+	reply.Term = rf.currTerm
+	if rf.snapshotIndex >= args.SnapshotIndex {
 		Debug(dSnap, "%v: ignored install-snapshot, my snpIdx=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.logs)
+		return
 	}
 
-	reply.Term = rf.currTerm
+	rf.snapshot = args.Data
+	rf.snapshotIndex = args.SnapshotIndex
+	rf.snapshotTerm = args.SnapshotTerm
+	if rf.logs[len(rf.logs)-1].Index < args.SnapshotIndex {
+		// No existing entry match snapshot index
+		// Discard logs and use snapshot as first log entry
+		rf.logs = make([]LogEntry, 1)
+	} else {
+		// Discard entries before snapshot index
+		rf.discardLogsBefore(args.SnapshotIndex)
+	}
+	// Rewrite logs[0] to match snapshot
+	rf.logs[0] = LogEntry{Index: args.SnapshotIndex, Term: args.SnapshotTerm}
+	Debug(dSnap, "%v: set snapshot, index=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.logs)
+	rf.commitIndex = max(rf.commitIndex, rf.snapshotIndex)
+	if rf.lastApplied < rf.snapshotIndex {
+		go rf.applySnapshot()
+	}
+	rf.persist()
 	return
 }
 
@@ -71,14 +70,13 @@ func (rf *Raft) sendSnapshot(peer int) {
 	Debug(dSnap, "%v: sending snapshot{index=%v, term=%v} to peer %v", idAndRole, rf.snapshotIndex, rf.snapshotTerm, peer)
 
 	// Simplification: send snapshot always in one chunk
-	dataChunk := make([]byte, len(rf.snapshot))
-	copy(dataChunk, rf.snapshot)
+	data := cloneBytes(rf.snapshot)
 	args := InstallSnapshotArgs{
 		Term:          rf.currTerm,
 		LeaderId:      rf.me,
 		SnapshotIndex: rf.snapshotIndex,
 		SnapshotTerm:  rf.snapshotTerm,
-		Data:          dataChunk,
+		Data:          data,
 	}
 	rf.mu.Unlock()
 
@@ -112,13 +110,12 @@ func (rf *Raft) discardLogsBefore(index int) {
 			break
 		}
 	}
-	rf.logs = rf.logs[from:]
+	rf.logs = cloneLogs(rf.logs[from:])
 }
 
 func (rf *Raft) applySnapshot() {
 	rf.mu.Lock()
-	data := make([]byte, len(rf.snapshot))
-	copy(data, rf.snapshot)
+	data := cloneBytes(rf.snapshot)
 	msg := ApplyMsg{
 		CommandValid:  false,
 		SnapshotValid: true,
