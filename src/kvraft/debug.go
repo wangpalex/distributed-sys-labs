@@ -1,7 +1,5 @@
-package raft
+package kvraft
 
-// Pretty debugging for Raft
-// Reference: https://blog.josejg.com/debugging-pretty/
 import (
 	"fmt"
 	"log"
@@ -13,22 +11,10 @@ import (
 type logTopic string
 
 const (
-	dClient  logTopic = "CLNT"
-	dCommit  logTopic = "CMIT"
-	dDrop    logTopic = "DROP"
-	dError   logTopic = "ERRO"
-	dInfo    logTopic = "INFO"
-	dLeader  logTopic = "LEAD"
-	dLog     logTopic = "LOG1"
-	dLog2    logTopic = "LOG2"
-	dPersist logTopic = "PERS"
-	dSnap    logTopic = "SNAP"
-	dTerm    logTopic = "TERM"
-	dTest    logTopic = "TEST"
-	dTimer   logTopic = "TIMR"
-	dTrace   logTopic = "TRCE"
-	dVote    logTopic = "VOTE"
-	dWarn    logTopic = "WARN"
+	dClient logTopic = "CLNT"
+	dServer logTopic = "SVER"
+	dApply  logTopic = "APLY"
+	dTest   logTopic = "TEST"
 )
 
 var debugStart time.Time
@@ -52,7 +38,7 @@ func Debug(topic logTopic, format string, a ...interface{}) {
 }
 
 func getVerbosity() int {
-	v := os.Getenv("RF_VERBOSE")
+	v := os.Getenv("KV_VERBOSE")
 	level := 0
 	if v != "" {
 		var err error

@@ -34,6 +34,8 @@ const (
 	// In milliseconds
 	ElectionTimeout   = 800
 	HeartbeatInterval = 100
+	//ElectionTimeout   = 300
+	//HeartbeatInterval = 30
 )
 
 const (
@@ -46,6 +48,7 @@ type ApplyMsg struct {
 	CommandValid bool // True if this msg is for newly committed log entry
 	Command      interface{}
 	CommandIndex int
+	CommandTerm  int
 
 	SnapshotValid bool // True if this msg is for snapshot
 	Snapshot      []byte
@@ -155,7 +158,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	}
 
 	index := len(rf.logs) + rf.snapshotIndex
-	Debug(dClient, "%v: receive command %+v, index=%v", rf.getIdAndRole(), command, index)
+	Debug(dInfo, "%v: receive command %+v, index=%v", rf.getIdAndRole(), command, index)
 	term := rf.currTerm
 	isLeader := true
 	rf.logs = append(rf.logs, LogEntry{
@@ -165,6 +168,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	})
 	rf.persist()
 	rf.matchIndex[rf.me] = index
+	go rf.replicateOneRound()
 
 	return index, term, isLeader
 }

@@ -152,6 +152,24 @@ func (rf *Raft) broadcastHeartbeat() {
 	}
 }
 
+func (rf *Raft) replicateOneRound() {
+	for peer := range rf.peers {
+		if peer == rf.me {
+			continue
+		}
+		rf.replicate(peer)
+	}
+}
+
+func (rf *Raft) replicate(peer int) {
+	rf.mu.Lock()
+	defer rf.mu.Unlock()
+	// Conditionally send append entries
+	if rf.role == Leader && rf.matchIndex[peer] < rf.lastLogIndex() {
+		go rf.sendHeartbeat(peer)
+	}
+}
+
 func (rf *Raft) getEntriesToSend(peer int) (prevLogIndex, prevLogTerm int, entries []LogEntry) {
 	nextIndex := rf.nextIndex[peer]
 	snpIdx := rf.snapshotIndex
@@ -189,10 +207,11 @@ func (rf *Raft) applyLogs() {
 			CommandValid: true,
 			Command:      cmd,
 			CommandIndex: idx,
+			CommandTerm:  entry.Term,
 		}
 		rf.mu.Lock()
 		rf.lastApplied = idx
-		Debug(dLog2, "%v: applied log index=%v, command=%v", rf.getIdAndRole(), idx, cmd)
+		Debug(dLog2, "%v: applied log index=%v, command=%+v", rf.getIdAndRole(), idx, cmd)
 		rf.mu.Unlock()
 	}
 }
