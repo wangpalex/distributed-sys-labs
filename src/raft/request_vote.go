@@ -114,9 +114,9 @@ func (rf *Raft) startElection() {
 		 * 3. currTerm changed (e.g.timeout and started new election).
 		 * 4. The raft instance is killed.
 		 */
-		rf.mu.Lock()
+		rf.mu.RLock()
 		giveUp := (rf.role != Candidate) || (rf.currTerm != args.Term)
-		rf.mu.Unlock()
+		rf.mu.RUnlock()
 		if giveUp {
 			return
 		}

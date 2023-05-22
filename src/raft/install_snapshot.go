@@ -48,7 +48,7 @@ func (rf *Raft) InstallSnapshot(args *InstallSnapshotArgs, reply *InstallSnapsho
 	// Rewrite logs[0] to match snapshot
 	rf.logs[0] = LogEntry{Index: args.SnapshotIndex, Term: args.SnapshotTerm}
 	Debug(dSnap, "%v: set snapshot, index=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.logs)
-	rf.commitIndex = max(rf.commitIndex, rf.snapshotIndex)
+	rf.commitIndex = Max(rf.commitIndex, rf.snapshotIndex)
 	if rf.lastApplied < rf.snapshotIndex {
 		go rf.applySnapshot()
 	}
@@ -61,16 +61,16 @@ func (rf *Raft) sendInstallSnapshot(server int, args *InstallSnapshotArgs, reply
 }
 
 func (rf *Raft) sendSnapshot(peer int) {
-	rf.mu.Lock()
+	rf.mu.RLock()
 	if rf.role != Leader {
-		rf.mu.Unlock()
+		rf.mu.RUnlock()
 		return
 	}
 	idAndRole := rf.getIdAndRole()
 	Debug(dSnap, "%v: sending snapshot{index=%v, term=%v} to peer %v", idAndRole, rf.snapshotIndex, rf.snapshotTerm, peer)
 
 	// Simplification: send snapshot always in one chunk
-	data := cloneBytes(rf.snapshot)
+	data := CloneBytes(rf.snapshot)
 	args := InstallSnapshotArgs{
 		Term:          rf.currTerm,
 		LeaderId:      rf.me,
@@ -78,7 +78,7 @@ func (rf *Raft) sendSnapshot(peer int) {
 		SnapshotTerm:  rf.snapshotTerm,
 		Data:          data,
 	}
-	rf.mu.Unlock()
+	rf.mu.RUnlock()
 
 	reply := InstallSnapshotReply{}
 	if !rf.sendInstallSnapshot(peer, &args, &reply) {
@@ -110,12 +110,12 @@ func (rf *Raft) discardLogsBefore(index int) {
 			break
 		}
 	}
-	rf.logs = cloneLogs(rf.logs[from:])
+	rf.logs = CloneLogs(rf.logs[from:])
 }
 
 func (rf *Raft) applySnapshot() {
-	rf.mu.Lock()
-	data := cloneBytes(rf.snapshot)
+	rf.mu.RLock()
+	data := CloneBytes(rf.snapshot)
 	msg := ApplyMsg{
 		CommandValid:  false,
 		SnapshotValid: true,
@@ -123,7 +123,7 @@ func (rf *Raft) applySnapshot() {
 		SnapshotTerm:  rf.snapshotTerm,
 		SnapshotIndex: rf.snapshotIndex,
 	}
-	rf.mu.Unlock()
+	rf.mu.RUnlock()
 
 	rf.applyCh <- msg
 	rf.mu.Lock()

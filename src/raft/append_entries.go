@@ -57,7 +57,7 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 		Debug(dTrace, "%v: do not have matching prevLogEntry", rf.getIdAndRole())
 		reply.Term = rf.currTerm
 		reply.Success = false
-		reply.NextIndex = rf.lastMatchingIndex(min(args.PrevLogIndex, rf.lastLogIndex()), args.PrevLogTerm) + 1
+		reply.NextIndex = rf.lastMatchingIndex(Min(args.PrevLogIndex, rf.lastLogIndex()), args.PrevLogTerm) + 1
 		return
 	}
 
@@ -73,8 +73,8 @@ func (rf *Raft) AppendEntries(args *AppendEntriesArgs, reply *AppendEntriesReply
 	}
 	lastNewIndex := args.PrevLogIndex + len(args.Entries)
 	if args.LeaderCommit > rf.commitIndex {
-		rf.commitIndex = min(args.LeaderCommit, lastNewIndex)
-		go rf.applyLogs()
+		rf.commitIndex = Min(args.LeaderCommit, lastNewIndex)
+		rf.applyCond.Signal()
 	}
 	reply.Term = rf.currTerm
 	reply.Success = true
@@ -162,8 +162,8 @@ func (rf *Raft) replicateOneRound() {
 }
 
 func (rf *Raft) replicate(peer int) {
-	rf.mu.Lock()
-	defer rf.mu.Unlock()
+	rf.mu.RLock()
+	defer rf.mu.RUnlock()
 	// Conditionally send append entries
 	if rf.role == Leader && rf.matchIndex[peer] < rf.lastLogIndex() {
 		go rf.sendHeartbeat(peer)
@@ -175,7 +175,7 @@ func (rf *Raft) getEntriesToSend(peer int) (prevLogIndex, prevLogTerm int, entri
 	snpIdx := rf.snapshotIndex
 	prevLogIndex = nextIndex - 1
 	prevLogTerm = rf.logs[prevLogIndex-snpIdx].Term
-	entries = cloneLogs(rf.logs[nextIndex-snpIdx:])
+	entries = CloneLogs(rf.logs[nextIndex-snpIdx:])
 	return
 }
 
@@ -188,38 +188,39 @@ func (rf *Raft) lastMatchingIndex(prevLogIndex, prevLogTerm int) int {
 	return i
 }
 
-func (rf *Raft) applyLogs() {
-	rf.mu.Lock()
-	if rf.lastApplied < rf.snapshotIndex || // Wait for snapshot to be applied
-		rf.commitIndex <= rf.lastApplied {
+func (rf *Raft) applier() {
+	for !rf.killed() {
+		rf.mu.Lock()
+		for rf.lastApplied < rf.snapshotIndex || // Wait for snapshot to be applied
+			rf.commitIndex <= rf.lastApplied {
+			rf.applyCond.Wait()
+		}
+		snpIdx := rf.snapshotIndex
+		lastIdx := rf.commitIndex
+		applyEntries := CloneLogs(rf.logs[rf.lastApplied+1-snpIdx : rf.commitIndex+1-snpIdx])
+		Debug(dLog2, "%v: entries to apply: %+v", rf.getIdAndRole(), applyEntries)
 		rf.mu.Unlock()
-		return
-	}
-	snpIdx := rf.snapshotIndex
-	baseIdx := rf.lastApplied + 1
-	applyEntries := cloneLogs(rf.logs[rf.lastApplied+1-snpIdx : rf.commitIndex+1-snpIdx])
-	rf.mu.Unlock()
 
-	for i, entry := range applyEntries {
-		idx := i + baseIdx
-		cmd := entry.Command
-		rf.applyCh <- ApplyMsg{
-			CommandValid: true,
-			Command:      cmd,
-			CommandIndex: idx,
-			CommandTerm:  entry.Term,
+		for _, entry := range applyEntries {
+			idx := entry.Index
+			cmd := entry.Command
+			rf.applyCh <- ApplyMsg{
+				CommandValid: true,
+				Command:      cmd,
+				CommandIndex: idx,
+				CommandTerm:  entry.Term,
+			}
+			Debug(dLog2, "%v: applied log index=%v, command=%+v", rf.getIdAndRoleWithLock(), idx, cmd)
 		}
 		rf.mu.Lock()
-		rf.lastApplied = idx
-		Debug(dLog2, "%v: applied log index=%v, command=%+v", rf.getIdAndRole(), idx, cmd)
+		rf.lastApplied = Max(rf.lastApplied, lastIdx)
+		Debug(dLog2, "%v: applier set lastApplied to %v", rf.getIdAndRole(), rf.lastApplied)
 		rf.mu.Unlock()
 	}
 }
 
 func (rf *Raft) commitLogs() {
-	rf.mu.Lock()
-	defer rf.mu.Unlock()
-
+	rf.mu.RLock()
 	n := len(rf.peers)
 	snpIdx := rf.snapshotIndex
 	matchIndex := append(make([]int, 0, n), rf.matchIndex...)
@@ -237,10 +238,13 @@ func (rf *Raft) commitLogs() {
 	 */
 	okToCommit := medianMatchIdx > rf.commitIndex && medianMatchIdx <= rf.lastLogIndex() &&
 		(rf.logs[medianMatchIdx-snpIdx].Term == rf.currTerm || medianMatchIdx == minMatchIdx)
+	rf.mu.RUnlock()
 
 	if okToCommit {
+		rf.mu.Lock()
 		rf.commitIndex = medianMatchIdx
 		Debug(dCommit, "%v: set commit index to %v", rf.getIdAndRole(), rf.commitIndex)
-		go rf.applyLogs()
+		rf.mu.Unlock()
+		rf.applyCond.Signal()
 	}
 }

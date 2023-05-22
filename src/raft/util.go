@@ -13,19 +13,19 @@ func GetRandElectionTimeout() time.Duration {
 	return time.Duration(ElectionTimeout+rand.Int63()%ElectionTimeout) * time.Millisecond
 }
 
-func cloneLogs(src []LogEntry) []LogEntry {
+func CloneLogs(src []LogEntry) []LogEntry {
 	dst := make([]LogEntry, len(src))
 	copy(dst, src)
 	return dst
 }
 
-func cloneBytes(src []byte) []byte {
+func CloneBytes(src []byte) []byte {
 	dst := make([]byte, len(src))
 	copy(dst, src)
 	return dst
 }
 
-func min(x, y int) int {
+func Min(x, y int) int {
 	if x <= y {
 		return x
 	} else {
@@ -33,7 +33,7 @@ func min(x, y int) int {
 	}
 }
 
-func max(x, y int) int {
+func Max(x, y int) int {
 	if x > y {
 		return x
 	} else {

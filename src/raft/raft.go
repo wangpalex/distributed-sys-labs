@@ -64,7 +64,7 @@ type LogEntry struct {
 
 // A Go object implementing a single Raft peer.
 type Raft struct {
-	mu        sync.Mutex          // Lock to protect shared access to this peer's state
+	mu        sync.RWMutex        // Lock to protect shared access to this peer's state
 	peers     []*labrpc.ClientEnd // RPC end points of all peers
 	persister *Persister          // Object to hold this peer's persisted state
 	me        int                 // this peer's index into peers[]
@@ -90,6 +90,7 @@ type Raft struct {
 	electionTimer   *time.Timer
 	heartbeatTimers []*time.Timer
 	stopHeartbeat   chan struct{}
+	applyCond       *sync.Cond
 }
 
 func Make(peers []*labrpc.ClientEnd, me int,
@@ -106,6 +107,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.role = Follower
 	rf.snapshotIndex = 0
 	rf.snapshotTerm = 0
+	rf.mu = sync.RWMutex{}
+	rf.applyCond = sync.NewCond(&rf.mu)
 
 	rf.heartbeatTimers = make([]*time.Timer, len(rf.peers))
 	for p := range rf.peers {
@@ -126,6 +129,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.electionTimer = time.NewTimer(GetInitElectionTimeout())
 	// start ticker goroutine to start elections
 	go rf.ticker()
+	go rf.applier()
 
 	return rf
 }
@@ -133,8 +137,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 // return currentTerm and whether this server
 // believes it is the leader.
 func (rf *Raft) GetState() (int, bool) {
-	rf.mu.Lock()
-	defer rf.mu.Unlock()
+	rf.mu.RLock()
+	defer rf.mu.RUnlock()
 	return rf.currTerm, rf.role == Leader
 }
 
@@ -187,7 +191,7 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	rf.snapshotIndex = index
 	rf.snapshotTerm = rf.logs[index-snpIdx].Term
 	rf.snapshot = snapshot
-	rf.logs = cloneLogs(rf.logs[index-snpIdx:])
+	rf.logs = CloneLogs(rf.logs[index-snpIdx:])
 	rf.persist()
 	Debug(dSnap, "%v: truncated log %+v", rf.getIdAndRole(), rf.logs)
 }
@@ -372,7 +376,7 @@ func (rf *Raft) getIdAndRole() string {
 }
 
 func (rf *Raft) getIdAndRoleWithLock() string {
-	rf.mu.Lock()
-	defer rf.mu.Unlock()
+	rf.mu.RLock()
+	defer rf.mu.RUnlock()
 	return rf.getIdAndRole()
 }
