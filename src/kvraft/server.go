@@ -84,7 +84,6 @@ func StartKVServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persiste
 }
 
 func (kv *KVServer) Get(args *GetArgs, reply *GetReply) {
-	Debug(dServer, "Server %d: Handling Get RPC, args=%+v", kv.me, *args)
 	op := Op{
 		Type:     OpGet,
 		Key:      args.Key,
@@ -96,6 +95,7 @@ func (kv *KVServer) Get(args *GetArgs, reply *GetReply) {
 		reply.Err = ErrWrongLeader
 		return
 	}
+	Debug(dServer, "Server %d: Handling Get RPC, args=%+v", kv.me, *args)
 
 	ch := kv.getNotifyCh(index)
 	select {
@@ -112,7 +112,6 @@ func (kv *KVServer) Get(args *GetArgs, reply *GetReply) {
 }
 
 func (kv *KVServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
-	Debug(dServer, "Server %d: Handling PutAppend RPC, args=%+v", kv.me, *args)
 	if kv.isDuplicate(args.ClientId, args.SeqNum) {
 		reply.Err = OK
 		return
@@ -130,6 +129,7 @@ func (kv *KVServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
 		reply.Err = ErrWrongLeader
 		return
 	}
+	Debug(dServer, "Server %d: Handling PutAppend RPC, args=%+v", kv.me, *args)
 
 	ch := kv.getNotifyCh(index)
 	select {
@@ -169,7 +169,7 @@ func (kv *KVServer) apply(op Op, commandIndex int) Result {
 	}
 
 	if op.Type == OpGet {
-		Debug(dApply, "Server %d: Applied Op=%+v", kv.me, op)
+		Debug(dApply, "Server %d: Applied Get, Op=%+v", kv.me, op)
 		if val, ok := kv.db[op.Key]; ok {
 			res.Value = val
 		} else {
@@ -177,10 +177,11 @@ func (kv *KVServer) apply(op Op, commandIndex int) Result {
 		}
 		kv.lastApplied = commandIndex
 	} else if !kv.isDuplicate(op.ClientId, op.SeqNum) {
-		Debug(dApply, "Server %d: Applied Op=%+v", kv.me, op)
 		if op.Type == OpPut {
+			Debug(dApply, "Server %d: Applied Put, Op=%+v", kv.me, op)
 			kv.db[op.Key] = op.Value
 		} else if op.Type == OpAppend {
+			Debug(dApply, "Server %d: Applied Append, Op=%+v", kv.me, op)
 			kv.db[op.Key] += op.Value
 		}
 		kv.updateMaxSeq(op.ClientId, op.SeqNum)
