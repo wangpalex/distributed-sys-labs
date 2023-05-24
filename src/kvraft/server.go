@@ -4,6 +4,7 @@ import (
 	"6.5840/labgob"
 	"6.5840/labrpc"
 	"6.5840/raft"
+	"bytes"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -20,9 +21,6 @@ const (
 )
 
 type Op struct {
-	// Your definitions here.
-	// Field names must start with capital letters,
-	// otherwise RPC will break.
 	Type     OpType
 	Key      string
 	Value    string
@@ -40,15 +38,15 @@ type KVServer struct {
 	me      int
 	rf      *raft.Raft
 	applyCh chan raft.ApplyMsg
-	dead    int32 // set by Kill()
+	dead    int32 // Set by Kill()
 
-	maxraftstate int // snapshot if log grows this big
+	persister    *raft.Persister
+	maxraftstate int // Take snapshot if log size exceeds threshold
 
-	// Your definitions here.
 	lastApplied int
-	maxSeq      map[int64]int64
+	lastSeq     map[int64]int64 // Last seqNum of each client
 	db          map[string]string
-	notifyChs   map[int]chan Result
+	notifyChs   map[int]chan Result // Fan-out applyCh to notifyChs by log index
 }
 
 // servers[] contains the ports of the set of
@@ -64,21 +62,23 @@ type KVServer struct {
 // StartKVServer() must return quickly, so it should start goroutines
 // for any long-running work.
 func StartKVServer(servers []*labrpc.ClientEnd, me int, persister *raft.Persister, maxraftstate int) *KVServer {
-	// call labgob.Register on structures you want
+	// Call labgob.Register on structures you want
 	// Go's RPC library to marshall/unmarshall.
 	labgob.Register(Op{})
 
 	kv := new(KVServer)
 	kv.me = me
+	kv.persister = persister
 	kv.maxraftstate = maxraftstate
 
 	kv.applyCh = make(chan raft.ApplyMsg)
 	kv.rf = raft.Make(servers, me, persister, kv.applyCh)
 	kv.lastApplied = 0
-	kv.maxSeq = make(map[int64]int64)
+	kv.lastSeq = make(map[int64]int64)
 	kv.db = make(map[string]string)
 	kv.notifyChs = make(map[int]chan Result)
-	go kv.startNotifier()
+	kv.decodeStates(persister.ReadSnapshot())
+	go kv.notifier()
 
 	return kv
 }
@@ -95,8 +95,8 @@ func (kv *KVServer) Get(args *GetArgs, reply *GetReply) {
 		reply.Err = ErrWrongLeader
 		return
 	}
-	Debug(dServer, "Server %d: Handling Get RPC, args=%+v", kv.me, *args)
 
+	Debug(dServer, "Server %d: Handling Get RPC, args=%+v", kv.me, *args)
 	ch := kv.getNotifyCh(index)
 	select {
 	case res := <-ch:
@@ -107,7 +107,7 @@ func (kv *KVServer) Get(args *GetArgs, reply *GetReply) {
 		reply.Value, reply.Err = "", ErrTimeout
 	}
 
-	// async delete the notify channel
+	// Async delete the notify channel
 	go kv.removeNotifyCh(index)
 }
 
@@ -129,8 +129,8 @@ func (kv *KVServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
 		reply.Err = ErrWrongLeader
 		return
 	}
-	Debug(dServer, "Server %d: Handling PutAppend RPC, args=%+v", kv.me, *args)
 
+	Debug(dServer, "Server %d: Handling PutAppend RPC, args=%+v", kv.me, *args)
 	ch := kv.getNotifyCh(index)
 	select {
 	case res := <-ch:
@@ -141,27 +141,31 @@ func (kv *KVServer) PutAppend(args *PutAppendArgs, reply *PutAppendReply) {
 		reply.Err = ErrTimeout
 	}
 
-	// async delete the notify channel
+	// Async delete the notify channel
 	go kv.removeNotifyCh(index)
 }
 
-func (kv *KVServer) startNotifier() {
+func (kv *KVServer) notifier() {
 	for !kv.killed() {
 		for msg := range kv.applyCh {
-			op := msg.Command.(Op)
-			res := kv.apply(op, msg.CommandIndex)
+			if msg.CommandValid {
+				op := msg.Command.(Op)
+				res := kv.applyOp(op, msg.CommandIndex)
 
-			if currTerm, isLeader := kv.rf.GetState(); isLeader && currTerm == msg.CommandTerm {
-				// notify only if is leader and the term matches
-				ch := kv.getNotifyCh(msg.CommandIndex)
-				ch <- res
+				if currTerm, isLeader := kv.rf.GetState(); isLeader && msg.CommandTerm == currTerm {
+					// Notify only if is leader and the term matches
+					ch := kv.getNotifyCh(msg.CommandIndex)
+					ch <- res
+				}
+			} else if msg.SnapshotValid {
+				kv.applySnapshot(msg.Snapshot, msg.SnapshotIndex)
 			}
 		}
 	}
 }
 
-func (kv *KVServer) apply(op Op, commandIndex int) Result {
-	// This func is synchronous in startNotifier(), no need to lock
+func (kv *KVServer) applyOp(op Op, commandIndex int) Result {
+	// This func is synchronous in notifier(), no need to lock
 	res := Result{}
 	res.Err = OK
 	if commandIndex <= kv.lastApplied {
@@ -169,26 +173,39 @@ func (kv *KVServer) apply(op Op, commandIndex int) Result {
 	}
 
 	if op.Type == OpGet {
-		Debug(dApply, "Server %d: Applied Get, Op=%+v", kv.me, op)
+		Debug(dApply, "Server %d: Applied Get, index=%v, Op=%+v", kv.me, commandIndex, op)
 		if val, ok := kv.db[op.Key]; ok {
 			res.Value = val
 		} else {
 			res.Value, res.Err = "", ErrNoKey
 		}
-		kv.lastApplied = commandIndex
 	} else if !kv.isDuplicate(op.ClientId, op.SeqNum) {
 		if op.Type == OpPut {
-			Debug(dApply, "Server %d: Applied Put, Op=%+v", kv.me, op)
+			Debug(dApply, "Server %d: Applied Put, index=%v, Op=%+v", kv.me, commandIndex, op)
 			kv.db[op.Key] = op.Value
 		} else if op.Type == OpAppend {
-			Debug(dApply, "Server %d: Applied Append, Op=%+v", kv.me, op)
+			Debug(dApply, "Server %d: Applied Append, index=%v, Op=%+v", kv.me, commandIndex, op)
 			kv.db[op.Key] += op.Value
 		}
 		kv.updateMaxSeq(op.ClientId, op.SeqNum)
-		kv.lastApplied = commandIndex
+
+		Debug(dServer, "Server %v: DB after apply PutAppend: %+v", kv.me, kv.db)
+	}
+	kv.lastApplied = commandIndex
+
+	if kv.maxraftstate != -1 && kv.persister.RaftStateSize() >= kv.maxraftstate {
+		data := kv.encodeStates()
+		kv.rf.Snapshot(kv.lastApplied, data)
 	}
 
 	return res
+}
+
+func (kv *KVServer) applySnapshot(data []byte, snapshotIndex int) {
+	kv.decodeStates(data)
+	kv.lastApplied = snapshotIndex
+	Debug(dApply, "Server %d: Applied Snapshot, index=%d", kv.me, snapshotIndex)
+	Debug(dServer, "Server %v: DB after apply Snapshot: %+v", kv.me, kv.db)
 }
 
 func (kv *KVServer) getNotifyCh(index int) chan Result {
@@ -210,13 +227,46 @@ func (kv *KVServer) removeNotifyCh(index int) {
 func (kv *KVServer) isDuplicate(clientId int64, seqNum int64) bool {
 	kv.mu.RLock()
 	defer kv.mu.RUnlock()
-	return seqNum <= kv.maxSeq[clientId]
+	return seqNum <= kv.lastSeq[clientId]
 }
 
 func (kv *KVServer) updateMaxSeq(clientId int64, seqNum int64) {
 	kv.mu.Lock()
 	defer kv.mu.Unlock()
-	kv.maxSeq[clientId] = seqNum
+	kv.lastSeq[clientId] = seqNum
+}
+
+func (kv *KVServer) encodeStates() []byte {
+	w := new(bytes.Buffer)
+	e := labgob.NewEncoder(w)
+	e.Encode(kv.db)
+
+	kv.mu.RLock()
+	e.Encode(kv.lastSeq)
+	kv.mu.RUnlock()
+
+	return w.Bytes()
+}
+
+func (kv *KVServer) decodeStates(data []byte) {
+	r := bytes.NewBuffer(data)
+	d := labgob.NewDecoder(r)
+	var db map[string]string
+	var lastSeq map[int64]int64
+
+	if d.Decode(&db) != nil {
+		Debug(dServer, "Server %d: Error decoding DB states", kv.me)
+	} else {
+		kv.db = db
+	}
+
+	kv.mu.Lock()
+	if d.Decode(&lastSeq) != nil {
+		Debug(dServer, "Server %d: Error decoding DB states", kv.me)
+	} else {
+		kv.lastSeq = lastSeq
+	}
+	kv.mu.Unlock()
 }
 
 // the tester calls Kill() when a KVServer instance won't

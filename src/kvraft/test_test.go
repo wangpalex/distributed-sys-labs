@@ -301,7 +301,7 @@ func GenericTest(t *testing.T, part string, nclients int, nservers int, unreliab
 			time.Sleep(1 * time.Second)
 			go partitioner(t, cfg, ch_partitioner, &done_partitioner)
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(5 * time.Second)
 
 		Debug(dTest, "\n*** Clients stop sending requests ***\n")
 		atomic.StoreInt32(&done_clients, 1)     // tell clients to quit
@@ -321,6 +321,7 @@ func GenericTest(t *testing.T, part string, nclients int, nservers int, unreliab
 
 		if crash {
 			// log.Printf("shutdown servers\n")
+			Debug(dTest, "\n*** Shutdown all servers ***\n")
 			for i := 0; i < nservers; i++ {
 				cfg.ShutdownServer(i)
 			}
@@ -329,9 +330,11 @@ func GenericTest(t *testing.T, part string, nclients int, nservers int, unreliab
 			time.Sleep(electionTimeout)
 			// log.Printf("restart servers\n")
 			// crash and re-start all
+			Debug(dTest, "\n*** Restart all servers ***\n")
 			for i := 0; i < nservers; i++ {
 				cfg.StartServer(i)
 			}
+			Debug(dTest, "\n*** Reconnect all servers ***\n")
 			cfg.ConnectAll()
 		}
 

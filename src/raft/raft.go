@@ -34,8 +34,6 @@ const (
 	// In milliseconds
 	ElectionTimeout   = 800
 	HeartbeatInterval = 100
-	//ElectionTimeout   = 300
-	//HeartbeatInterval = 30
 )
 
 const (
@@ -64,12 +62,15 @@ type LogEntry struct {
 
 // A Go object implementing a single Raft peer.
 type Raft struct {
-	mu        sync.RWMutex        // Lock to protect shared access to this peer's state
 	peers     []*labrpc.ClientEnd // RPC end points of all peers
 	persister *Persister          // Object to hold this peer's persisted state
-	me        int                 // this peer's index into peers[]
-	dead      int32               // set by Kill()
-	applyCh   chan ApplyMsg       // Channel to send applied entries or snapshot
+	me        int                 // This peer's index into peers[]
+	dead      int32               // Set by Kill()
+
+	// Synchronization
+	mu        sync.RWMutex  // Lock to protect shared access to this peer's state
+	applyCh   chan ApplyMsg // Channel to send applied entries or snapshot
+	applyCond *sync.Cond    // Condition variable to signal log apply
 
 	// Persistent states
 	currTerm      int        // Current term known
@@ -90,7 +91,6 @@ type Raft struct {
 	electionTimer   *time.Timer
 	heartbeatTimers []*time.Timer
 	stopHeartbeat   chan struct{}
-	applyCond       *sync.Cond
 }
 
 func Make(peers []*labrpc.ClientEnd, me int,
@@ -100,6 +100,8 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.persister = persister
 	rf.me = me
 	rf.applyCh = applyCh
+	rf.mu = sync.RWMutex{}
+	rf.applyCond = sync.NewCond(&rf.mu)
 
 	rf.currTerm = 0
 	rf.votedFor = -1
@@ -107,8 +109,6 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	rf.role = Follower
 	rf.snapshotIndex = 0
 	rf.snapshotTerm = 0
-	rf.mu = sync.RWMutex{}
-	rf.applyCond = sync.NewCond(&rf.mu)
 
 	rf.heartbeatTimers = make([]*time.Timer, len(rf.peers))
 	for p := range rf.peers {
@@ -118,7 +118,7 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	}
 	rf.stopHeartbeat = make(chan struct{})
 
-	// initialize from state persisted before a crash
+	// Initialize from state persisted before a crash
 	rf.readPersist()
 	// Set commit index and last applied index to at least snapshot index
 	rf.commitIndex = rf.snapshotIndex
@@ -127,14 +127,15 @@ func Make(peers []*labrpc.ClientEnd, me int,
 	// Debug(dTrace, "%v: snpIdx=%v, snpTerm=%v, logs %+v", rf.getIdAndRole(), rf.snapshotIndex, rf.snapshotTerm, rf.logs)
 
 	rf.electionTimer = time.NewTimer(GetInitElectionTimeout())
-	// start ticker goroutine to start elections
+	// Start ticker goroutine to start elections
 	go rf.ticker()
+	// Start dedicated applier goroutine
 	go rf.applier()
 
 	return rf
 }
 
-// return currentTerm and whether this server
+// Returns currentTerm and whether this server
 // believes it is the leader.
 func (rf *Raft) GetState() (int, bool) {
 	rf.mu.RLock()
@@ -177,7 +178,7 @@ func (rf *Raft) Start(command interface{}) (int, int, bool) {
 	return index, term, isLeader
 }
 
-// the service says it has created a snapshot that has
+// The service says it has created a snapshot that has
 // all info up to and including index. this means the
 // service no longer needs the log through (and including)
 // that index. Raft should now trim its log as much as possible.
@@ -185,6 +186,9 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	// Your code here (2D).
 	rf.mu.Lock()
 	defer rf.mu.Unlock()
+	if index <= rf.snapshotIndex {
+		return
+	}
 	Debug(dSnap, "%v: taking snapshot, index=%v", rf.getIdAndRole(), index)
 
 	snpIdx := rf.snapshotIndex
@@ -196,12 +200,12 @@ func (rf *Raft) Snapshot(index int, snapshot []byte) {
 	Debug(dSnap, "%v: truncated log %+v", rf.getIdAndRole(), rf.logs)
 }
 
-// the tester doesn't halt goroutines created by Raft after each test,
+// The tester doesn't halt goroutines created by Raft after each test,
 // but it does call the Kill() method. your code can use killed() to
 // check whether Kill() has been called. the use of atomic avoids the
 // need for a lock.
 //
-// the issue is that long-running goroutines use memory and may chew
+// The issue is that long-running goroutines use memory and may chew
 // up CPU time, perhaps causing later tests to fail and generating
 // confusing debug output. any goroutine with a long-running loop
 // should call killed() to check whether it should stop.
@@ -226,7 +230,7 @@ func (rf *Raft) ticker() {
 	}
 }
 
-// save Raft's persistent state to stable storage,
+// Save Raft's persistent state to stable storage,
 // where it can later be retrieved after a crash and restart.
 // see paper's Figure 2 for a description of what should be persistent.
 // before you've implemented snapshots, you should pass nil as the
